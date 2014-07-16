@@ -46,7 +46,7 @@ $(document).ready(function() {
 		if (yourTurn == true) { 
 	      // Stop processing clicks and invoke sendMessage(). 
 		  yourTurn = false;
-    	  sendMessage(this.id);
+    	  sendTurnMessage(this.id);
     	  // Add the X or O to the game board and update status.
 	      $("#" + this.id).addClass(player);
 	      $("#" + this.id).html(player);	    	  
@@ -58,17 +58,18 @@ $(document).ready(function() {
     ws = new WebSocket(WEBSOCKET_URL);
     
     ws.onopen = function(event) { 
-    	$('#status').text(WAITING_STATUS); 
+    	$('#status').text(WAITING_STATUS);
     }
     
     // Process turn message ("push") from the server.
 	ws.onmessage = function(event) {
  		var message = jQuery.parseJSON(event.data);
+
+ 		console.debug(message);
  		
  		// Process the handshake response when the page is opened
- 		if (message.type === MESSAGE_HANDSHAKE) {
-   	 		gameId = message.gameId;
-   	 		player = message.player;
+ 		if (message.messageType === MESSAGE_HANDSHAKE) {
+   	 		player = message.playerLetter;
 
    	 	 	if (player === PLAYER_X) {
    	 	 		opponent = PLAYER_O; 
@@ -124,8 +125,8 @@ $(document).ready(function() {
 });
 
 // Send your turn information to the server.
-function sendMessage(id) {
-	var message = {gameId: gameId, player: player, gridId:id};
+function sendTurnMessage(id) {
+	var message = {messageType:"TURN", gridId:id};
 	var encoded = $.toJSON(message);
 	ws.send(encoded);
 };

@@ -11,10 +11,10 @@ class GamesActor extends Actor {
   def receive = {
     case registerPlayer: RegisterPlayerRequest => {
       val player = registerPlayer.player
-      val uuid = registerPlayer.uuid
+      val gameUuid = java.util.UUID.randomUUID.toString
 
       // 1. Search for an open game first (this won't work!)
-      val game = context.actorOf(Props[GameActor], name = "gameActor")
+      val game = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
 
       // 2. When you find an open game or create a new one, register the player
       game ! registerPlayer

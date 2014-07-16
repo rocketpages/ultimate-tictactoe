@@ -11,8 +11,6 @@ class GameActor extends Actor {
 
   import actors.GameStatus._
 
-  val UUID = java.util.UUID.randomUUID.toString
-
   var playerX: Option[ActorRef] = None
   var playerO: Option[ActorRef] = None
 

@@ -9,10 +9,10 @@ object HandshakeResponse {
 
   implicit val writes: Writes[HandshakeResponse] = (
     (JsPath \ "messageType").write[String] and
-    (JsPath \ "playerLetter").write[PlayerLetter])(unlift(HandshakeResponse.unapply))
+    (JsPath \ "playerLetter").write[String])(unlift(HandshakeResponse.unapply))
 
-  def apply(l: PlayerLetter) = new HandshakeResponse(playerLetter = l)
+  def apply(l: PlayerLetter) = new HandshakeResponse(playerLetter = l.toString)
 }
 
-case class HandshakeResponse(messageType: String = HandshakeResponse.HANDSHAKE, playerLetter: PlayerLetter)
+case class HandshakeResponse(messageType: String = HandshakeResponse.HANDSHAKE, playerLetter: String)
 

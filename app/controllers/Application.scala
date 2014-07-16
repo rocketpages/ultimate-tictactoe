@@ -9,7 +9,7 @@ import play.libs.Akka
 
 object Application extends Controller {
 
-  lazy val gamesActor = Akka.system.actorOf(Props[GamesActor], name = "gamesactor")
+  lazy val gamesActor = Akka.system.actorOf(Props[GamesActor], name = "gamesActor")
 
   /**
    * Renders the UI
@@ -22,7 +22,7 @@ object Application extends Controller {
    * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
    * the actor that Play should create when it receives the WebSocket connection.
    */
-  def handshake = WebSocket.acceptWithActor[JsValue, JsValue] { request => channel =>
+  def websocket = WebSocket.acceptWithActor[JsValue, JsValue] { request => channel =>
     PlayerActor.props(channel, gamesActor)
   }
 
