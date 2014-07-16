@@ -1,22 +1,24 @@
 package actors
 
-import actors.GameStatus._
+import actors.messages.RegisterPlayerRequest
 import akka.actor._
 
 object GamesActor {
-  def props() = Props(new GamesActor)
+  def props = Props(new GamesActor)
 }
 
 class GamesActor extends Actor {
-
-  import actors.GameStatus._
-
-  // Status of the current game
-  var gameStatus: GameStatus = WAITING
-
   def receive = {
-    case msg: String => sender() ! ("I received your message: " + msg)
-  }
+    case registerPlayer: RegisterPlayerRequest => {
+      val player = registerPlayer.player
+      val uuid = registerPlayer.uuid
 
+      // 1. Search for an open game first (this won't work!)
+      val game = context.actorOf(Props[GameActor], name = "gameActor")
+
+      // 2. When you find an open game or create a new one, register the player
+      game ! registerPlayer
+    }
+  }
 }
 

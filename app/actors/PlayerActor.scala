@@ -1,25 +1,33 @@
 package actors
 
 import actors.PlayerLetter.PlayerLetter
+import actors.messages.{RegisterPlayerResponse, RegisterPlayerRequest}
 import akka.actor._
+import backend.messages.HandshakeResponse
+import play.api.libs.json.JsValue
 
 object PlayerActor {
-  def props(channel: ActorRef) = Props(new PlayerActor(channel))
+  def props(channel: ActorRef, gamesActor: ActorRef) = Props(new PlayerActor(channel, gamesActor))
 }
 
-class PlayerActor(channel: ActorRef) extends Actor {
+class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
 
-  //1. find game, e.g, val game: Game = findGame()
-  //2. assign letter, e.g, val letter: Option[PlayerLetter] = game.addPlayer(self)
-  //3. start game if two people present
+  val UUID = java.util.UUID.randomUUID.toString
+  var game: Option[ActorRef] = None
+  var playerLetter: Option[PlayerLetter] = None
 
   override def preStart() {
-
+    gamesActor ! RegisterPlayerRequest(self, UUID)
   }
 
   def receive = {
-    case msg: String =>
-      channel ! ("I received your message: " + msg)
+    case request: JsValue =>
+      channel ! ("I received your request")
+    case registerPlayerResponse: RegisterPlayerResponse => {
+      game = Some(registerPlayerResponse.game)
+      val letter = registerPlayerResponse.playerLetter
+      channel ! HandshakeResponse(letter)
+    }
   }
 
 }

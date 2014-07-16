@@ -14,10 +14,9 @@ package object actors {
   }
 
   object ActorMessages {
-
     case class CellSelection(player: PlayerLetter, cellNum: Int)
-    case class FindGame(out: ActorRef)
-
+    case class FindGame()
+    case class
   }
 
 }
