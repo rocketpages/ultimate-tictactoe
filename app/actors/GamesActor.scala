@@ -1,6 +1,6 @@
 package actors
 
-import actors.messages.{RegisterPlayerResponse, RegisterPlayerRequest}
+import actors.messages.{ RegisterPlayerResponse, RegisterPlayerRequest }
 import akka.actor._
 import akka.util.Timeout
 import scala.concurrent.Await
@@ -16,25 +16,27 @@ class GamesActor extends Actor {
     case registerPlayerRequest: RegisterPlayerRequest => {
       val player = registerPlayerRequest.player
 
-      var foundEmptyGame = false
       // find an existing game looking for an opponent
+      var foundAvailableGame = false
       for (child <- context.children) {
         val response = attemptRegistration(child, registerPlayerRequest)
         response.playerLetter match {
           case Some(letter) => {
             player ! response
-            foundEmptyGame = true
+            foundAvailableGame = true
           }
+          case _ => // we're not concerned with non-matches
         }
       }
 
       // if not found, create a new game and register the player
-      val game = if (!foundEmptyGame) {
+      val game = if (!foundAvailableGame) {
         val gameUuid = java.util.UUID.randomUUID.toString
         val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
         val response = attemptRegistration(newGame, registerPlayerRequest)
         player ! response
       }
+
     }
   }
 

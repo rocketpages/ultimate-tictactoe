@@ -33,9 +33,9 @@ class BoardActor() extends Actor {
   /*
 	 * Represents a flattened game board for Tic-Tac-Toe. Below is the index value for each game cell.
 	 *
-	 *    1 | 2 | 3
-	 *    4 | 5 | 6
-	 *    7 | 8 | 9
+	 * 1 | 2 | 3
+	 * 4 | 5 | 6
+	 * 7 | 8 | 9
 	 */
   var cells: Array[Option[PlayerLetter]] = new Array[Option[PlayerLetter]](9)
 
@@ -46,12 +46,13 @@ class BoardActor() extends Actor {
   def receive = {
     case msg: CellSelection =>
       // Process the player's turn and return the game's status
-      sender() ! processTurn(msg.cellNum, msg.player)
+      sender ! processTurn(msg.cellNum, msg.player)
   }
 
   private def processTurn(cellNum: Int, player: PlayerLetter): GameStatus = {
     // 1. mark cell
     cells(cellNum - 1) = Some(player)
+
     // 2. return status of game
     if (isWinner(player)) {
       GameStatus.WON

@@ -1,6 +1,6 @@
 package actors
 
-import actors.messages.{RegisterPlayerResponse, RegisterPlayerRequest}
+import actors.messages.{ RegisterPlayerResponse, RegisterPlayerRequest }
 import akka.actor._
 import backend.messages.TurnResponse
 
@@ -36,12 +36,10 @@ class GameActor extends Actor {
     if (playerX == None) {
       playerX = Some(player)
       Some(PlayerLetter.X)
-    }
-    else if (playerO == None) {
+    } else if (playerO == None) {
       playerO = Some(player)
       Some(PlayerLetter.O)
-    }
-    else {
+    } else {
       None
     }
   }
