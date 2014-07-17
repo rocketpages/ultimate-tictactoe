@@ -70,11 +70,14 @@ $(document).ready(function() {
  		// Process the handshake response when the page is opened
  		if (message.messageType === MESSAGE_HANDSHAKE) {
    	 		player = message.playerLetter;
+   	 		console.debug("your player letter is " + player);
 
    	 	 	if (player === PLAYER_X) {
-   	 	 		opponent = PLAYER_O; 
+   	 	 		opponent = PLAYER_O;
+   	 	 		console.debug("your opponent is O");
    	 	 	} else {
-   	 	 		opponent = PLAYER_X;   	 	 	
+   	 	 		opponent = PLAYER_X;
+   	 	 		console.debug("your opponent is X");
    	 	 	}
  		}
  		
@@ -98,11 +101,11 @@ $(document).ready(function() {
  		/* The initial turn indicator from the server. Determines who starts
  		   the game first. Both players wait until the server gives the OK
  		   to start a game. */
- 		if (message.type === MESSAGE_TURN_INDICATOR) {
- 			if (message.turn === MESSAGE_TURN_INDICATOR_YOUR_TURN) {
+ 		if (message.messageType === MESSAGE_TURN_INDICATOR) {
+ 			if (message.turnIndicator === MESSAGE_TURN_INDICATOR_YOUR_TURN) {
  				yourTurn = true;
 	    		$('#status').text(YOUR_TURN_STATUS);    	 			
-    		} else if (message.turn === MESSAGE_TURN_INDICATOR_WAITING) {
+    		} else if (message.turnIndicator === MESSAGE_TURN_INDICATOR_WAITING) {
 				$('#status').text(STRATEGIZING_STATUS);    	 					    	
     		}
  		}
