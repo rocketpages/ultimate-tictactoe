@@ -1,7 +1,7 @@
 package actors
 
 import actors.PlayerLetter.PlayerLetter
-import actors.messages.{ RegisterPlayerResponse, RegisterPlayerRequest }
+import actors.messages.{TurnRequest, RegisterPlayerResponse, RegisterPlayerRequest}
 import akka.actor._
 import backend.messages.{ TurnResponse, HandshakeResponse }
 import play.api.libs.json.{ Json, JsValue }
@@ -32,10 +32,15 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
     case turnResponse: TurnResponse => {
       channel ! Json.toJson(turnResponse)
     }
-    case gridId: String => {
+    case turnRequest: JsValue => {
       maybeGame match {
         case Some(game) => {
-          // send grid ID + player letter to the game
+          val gridStr: String = (turnRequest \ "gridId").as[String]
+          val gridNum = gridStr.startsWith("grid_") match {
+            case true => gridStr.substring("grid_".length, gridStr.length)
+            case false => throw new IllegalArgumentException
+          }
+          game ! TurnRequest(maybePlayerLetter.get, gridNum)
         }
         case _ => // TODO
       }

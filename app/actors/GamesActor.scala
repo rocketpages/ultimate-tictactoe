@@ -13,31 +13,29 @@ object GamesActor {
 
 class GamesActor extends Actor {
   def receive = {
-    case registerPlayerRequest: RegisterPlayerRequest => {
-      val player = registerPlayerRequest.player
+    // register for an existing game or create a new one and register
+    case request: RegisterPlayerRequest => if (!hopefullyRegisterForExistingGame(request)) createNewGame(request)
+  }
 
-      // find an existing game looking for an opponent
-      var foundAvailableGame = false
-      for (child <- context.children) {
-        val response = attemptRegistration(child, registerPlayerRequest)
-        response.playerLetter match {
-          case Some(letter) => {
-            player ! response
-            foundAvailableGame = true
-          }
-          case _ => // we're not concerned with non-matches
+  private def hopefullyRegisterForExistingGame(request: RegisterPlayerRequest): Boolean = {
+    var foundGame = false
+    for (child <- context.children) {
+      val response = attemptRegistration(child, request)
+      response.playerLetter match {
+        case Some(letter) => {
+          request.player ! response
+          foundGame = true
         }
       }
-
-      // if not found, create a new game and register the player
-      val game = if (!foundAvailableGame) {
-        val gameUuid = java.util.UUID.randomUUID.toString
-        val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
-        val response = attemptRegistration(newGame, registerPlayerRequest)
-        player ! response
-      }
-
     }
+    foundGame
+  }
+
+  private def createNewGame(request: RegisterPlayerRequest) = {
+      val gameUuid = java.util.UUID.randomUUID.toString
+      val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
+      val response = attemptRegistration(newGame, request)
+      request.player ! response
   }
 
   private def attemptRegistration(game: ActorRef, request: RegisterPlayerRequest): RegisterPlayerResponse = {

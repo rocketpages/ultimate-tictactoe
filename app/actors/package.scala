@@ -14,7 +14,7 @@ package object actors {
   }
 
   object ActorMessages {
-    case class CellSelection(player: PlayerLetter, cellNum: Int)
+    case class CellSelection(playerLetter: PlayerLetter, cellNum: Int)
   }
 
 }
