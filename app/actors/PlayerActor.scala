@@ -3,7 +3,7 @@ package actors
 import actors.PlayerLetter.PlayerLetter
 import actors.messages.{TurnRequest, RegisterPlayerResponse, RegisterPlayerRequest}
 import akka.actor._
-import backend.messages.{ TurnResponse, HandshakeResponse }
+import backend.messages.{OpponentTurnResponse, GameStartResponse, HandshakeResponse}
 import play.api.libs.json.{ Json, JsValue }
 
 object PlayerActor {
@@ -29,8 +29,12 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
         case _ => throw new RuntimeException("We shouldn't be sending back a handshake without an X or O!")
       }
     }
-    case turnResponse: TurnResponse => {
+    case turnResponse: GameStartResponse => {
       channel ! Json.toJson(turnResponse)
+    }
+    case opponentResponse: OpponentTurnResponse => {
+      System.out.println("Game: sending message to " + maybePlayerLetter.get.toString)
+      channel ! Json.toJson(opponentResponse)
     }
     case turnRequest: JsValue => {
       maybeGame match {
@@ -42,7 +46,7 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
           }
           game ! TurnRequest(maybePlayerLetter.get, gridNum)
         }
-        case _ => // TODO
+        case _ => throw new RuntimeException("Where am I? How did I get here?")
       }
     }
   }

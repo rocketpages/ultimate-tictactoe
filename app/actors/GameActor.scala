@@ -3,7 +3,7 @@ package actors
 import actors.GameStatus.GameStatus
 import actors.messages.{ RegisterPlayerRequest, RegisterPlayerResponse, TurnRequest }
 import akka.actor._
-import backend.messages.TurnResponse
+import backend.messages.{OpponentTurnResponse, GameStartResponse}
 
 object GameActor {
   def props = Props(new GameActor)
@@ -28,8 +28,25 @@ class GameActor extends Actor {
       hopefullyStartGame
     }
     case turnRequest: TurnRequest => {
+      System.out.println("Game: processing turn request")
       val gameStatus = board.processTurn(turnRequest.gridNum.toInt, turnRequest.playerLetter)
-      // figure out turn status and how to reply to each player
+
+      if (gameStatus == GameStatus.WON)
+      {
+        System.out.println("Game: WON")
+        // doesn't matter yet
+      }
+      else if (gameStatus == GameStatus.TIED)
+      {
+        System.out.println("Game: TIED")
+        // update the opponent
+      }
+      else
+      {
+        System.out.println("Game: sending message to opponent")
+        val opponent = if (turnRequest.playerLetter == PlayerLetter.O) playerX.get else playerO.get
+        opponent ! OpponentTurnResponse(gridId = turnRequest.gridNum, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+      }
     }
   }
 
@@ -54,8 +71,8 @@ class GameActor extends Actor {
    */
   private def hopefullyStartGame {
     if (playerX != None && playerO != None) {
-      playerX.get ! TurnResponse(turnIndicator = TurnResponse.YOUR_TURN)
-      playerO.get ! TurnResponse(turnIndicator = TurnResponse.WAITING)
+      playerX.get ! GameStartResponse(turnIndicator = GameStartResponse.YOUR_TURN)
+      playerO.get ! GameStartResponse(turnIndicator = GameStartResponse.WAITING)
     }
   }
 
@@ -90,7 +107,7 @@ class GameBoard {
 	 * 4 | 5 | 6
 	 * 7 | 8 | 9
 	 */
-  var cells: Array[Option[PlayerLetter]] = new Array[Option[PlayerLetter]](9)
+  var cells = Array.fill(9)(None:Option[PlayerLetter])
 
   /**
    * Mark the cell the player selected
@@ -135,15 +152,16 @@ class GameBoard {
   private def isTied: Boolean = {
     var boardFull = true
     var tied = false
-    for (i <- 0 until 9) {
-      val letter: Option[PlayerLetter] = cells(i)
-      if (letter == None) {
-        boardFull = false
-      }
+
+    for (cell <- cells) {
+      if (cell == None) boardFull = false
     }
-    if (boardFull && (!isWinner(PlayerLetter.X) || !isWinner(PlayerLetter.O))) {
+
+    System.out.println("board full: " + boardFull)
+    if (boardFull && (!isWinner(PlayerLetter.X) && !isWinner(PlayerLetter.O))) {
       tied = true
     }
+
     tied
   }
 

@@ -26,6 +26,7 @@ class GamesActor extends Actor {
           request.player ! response
           foundGame = true
         }
+        case _ => throw new RuntimeException("Where am I? How did I get here?")
       }
     }
     foundGame

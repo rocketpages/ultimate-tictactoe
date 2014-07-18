@@ -82,16 +82,16 @@ $(document).ready(function() {
  		}
  		
  		// Process your opponent's turn data.
- 		if (message.type === MESSAGE_OPPONENT_UPDATE) {
+ 		if (message.messageType === MESSAGE_OPPONENT_UPDATE) {
  			// Show their turn info on the game board.
- 			$("#" + message.gridId).addClass(message.opponent);
- 			$("#" + message.gridId).html(message.opponent);
- 			
+ 			$("#grid_" + message.gridId).addClass(opponent);
+ 			$("#grid_" + message.gridId).html(opponent);
+
  			// Switch to your turn.
- 			if (message.winner == true) {
- 				$('#status').text(message.opponent + " is the winner!"); 
- 			} else if (message.tied == true) {
- 				$('#status').text(TIED_STATUS);   	   	 			
+ 			if (message.status == MESSAGE_GAME_OVER_YOU_WIN) {
+ 				$('#status').text(message.opponent + " is the winner!");
+ 			} else if (message.status == MESSAGE_GAME_OVER_TIED) {
+ 				$('#status').text(TIED_STATUS);
  			} else {
  				yourTurn = true;
     			$('#status').text(YOUR_TURN_STATUS);    	   	 			
@@ -111,7 +111,7 @@ $(document).ready(function() {
  		}
  		
  		/* The server has determined you are the winner and sent you this message. */
- 		if (message.type === MESSAGE_GAME_OVER) {
+ 		if (message.messageType === MESSAGE_GAME_OVER) {
 	 		if (message.result === MESSAGE_GAME_OVER_YOU_WIN) {
 				$('#status').text(YOU_WIN_STATUS);
 			} 
