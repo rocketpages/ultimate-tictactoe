@@ -3,6 +3,7 @@ var STRATEGIZING_STATUS = "Your opponent is strategizing.";
 var WAITING_STATUS = "Waiting for an opponent.";
 var YOUR_TURN_STATUS = "It's your turn!";
 var YOU_WIN_STATUS = "You win!";
+var YOU_LOSE_STATUS = "You lose!";
 var TIED_STATUS = "The game is tied.";
 var WEBSOCKET_CLOSED_STATUS = "The WebSocket Connection Has Been Closed.";
 
@@ -14,7 +15,7 @@ var PLAYER_X = "X";
 var MESSAGE_HANDSHAKE = "handshake";
 var MESSAGE_OPPONENT_UPDATE = "response";
 var MESSAGE_TURN_INDICATOR = "turn";
-var MESSAGE_GAME_OVER = "game_over";
+var MESSAGE_GAME_OVER = "GAME_OVER";
 
 // Constants - Message turn indicator types
 var MESSAGE_TURN_INDICATOR_YOUR_TURN = "YOUR_TURN";
@@ -109,16 +110,18 @@ $(document).ready(function() {
 				$('#status').text(STRATEGIZING_STATUS);    	 					    	
     		}
  		}
- 		
- 		/* The server has determined you are the winner and sent you this message. */
- 		if (message.messageType === MESSAGE_GAME_OVER) {
-	 		if (message.result === MESSAGE_GAME_OVER_YOU_WIN) {
-				$('#status').text(YOU_WIN_STATUS);
-			} 
-			else if (message.result === MESSAGE_GAME_OVER_TIED) {
-				$('#status').text(TIED_STATUS);
-			}
- 		}	
+
+        /* The server has determined you are the winner and sent you this message. */
+        if (message.messageType === MESSAGE_GAME_OVER) {
+            if (message.status === MESSAGE_GAME_OVER_TIED) {
+                $('#status').text(TIED_STATUS);
+            } else if (message.status === MESSAGE_GAME_OVER_YOU_WIN) {
+                $('#status').text(YOU_WIN_STATUS);
+            }
+            else {
+                $('#status').text(YOU_LOSE_STATUS);
+            }
+        }
  	} 
  	
  	ws.onclose = function(event) { 

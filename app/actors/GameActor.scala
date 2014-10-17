@@ -3,7 +3,7 @@ package actors
 import actors.GameStatus.GameStatus
 import actors.messages.{ RegisterPlayerRequest, RegisterPlayerResponse, TurnRequest }
 import akka.actor._
-import backend.messages.{OpponentTurnResponse, GameStartResponse}
+import backend.messages.{GameOverResponse, OpponentTurnResponse, GameStartResponse}
 
 object GameActor {
   def props = Props(new GameActor)
@@ -34,12 +34,24 @@ class GameActor extends Actor {
       if (gameStatus == GameStatus.WON)
       {
         System.out.println("Game: WON")
-        // doesn't matter yet
+        val gameOverResponse = if (turnRequest.playerLetter == PlayerLetter.X) {
+          GameOverResponse(false, Some("X"))
+        } else {
+          GameOverResponse(false, Some("O"))
+        }
+        playerX.get ! gameOverResponse
+        playerO.get ! gameOverResponse
       }
       else if (gameStatus == GameStatus.TIED)
       {
         System.out.println("Game: TIED")
-        // update the opponent
+        val gameOverResponse = if (turnRequest.playerLetter == PlayerLetter.X) {
+          GameOverResponse(true, Some("X"))
+        } else {
+          GameOverResponse(true, Some("O"))
+        }
+        playerX.get ! gameOverResponse
+        playerO.get ! gameOverResponse
       }
       else
       {
@@ -122,13 +134,15 @@ class GameBoard {
    */
   private def getGameStatus(player: PlayerLetter): GameStatus = {
     // 2. return status of game
-    if (isWinner(player)) {
+    val status = if (isWinner(player)) {
       GameStatus.WON
     } else if (isTied) {
       GameStatus.TIED
     } else {
       GameStatus.IN_PROGRESS
     }
+    System.out.println("status: " + status)
+    status
   }
 
   /**
@@ -143,6 +157,7 @@ class GameBoard {
         foundWinningCombo = true
       }
     }
+    System.out.println("winning combo? " + foundWinningCombo)
     foundWinningCombo
   }
 
