@@ -1,7 +1,7 @@
 package actors
 
 import actors.GameStatus.GameStatus
-import actors.messages.{ RegisterPlayerRequest, RegisterPlayerResponse, TurnRequest }
+import actors.messages.{RegisterPlayerRequest, RegisterPlayerResponse, TurnRequest}
 import akka.actor._
 import backend.messages.{GameOverResponse, OpponentTurnResponse, GameStartResponse}
 
@@ -16,50 +16,59 @@ class GameActor extends Actor {
   var playerX: Option[ActorRef] = None
   var playerO: Option[ActorRef] = None
 
-  // Status of the current game
   var gameStatus: GameStatus = WAITING
 
+  /**
+   * TODO: put this elsewhere. a new board should be created when the actor is created.
+   */
   val board = new GameBoard()
 
   def receive = {
-    case request: RegisterPlayerRequest => {
-      val player = request.player
-      sender ! RegisterPlayerResponse(self, getLetterForPlayerHopefully(player))
-      hopefullyStartGame
-    }
-    case turnRequest: TurnRequest => {
-      System.out.println("Game: processing turn request")
-      val gameStatus = board.processTurn(turnRequest.gridNum.toInt, turnRequest.playerLetter)
+    case msg: RegisterPlayerRequest => registerPlayerForGame(msg)
+    case msg: TurnRequest => handleTurnRequest(msg)
+  }
 
-      if (gameStatus == GameStatus.WON)
-      {
-        System.out.println("Game: WON")
-        val gameOverResponse = if (turnRequest.playerLetter == PlayerLetter.X) {
-          GameOverResponse(false, Some("X"))
-        } else {
-          GameOverResponse(false, Some("O"))
-        }
-        playerX.get ! gameOverResponse
-        playerO.get ! gameOverResponse
-      }
-      else if (gameStatus == GameStatus.TIED)
-      {
-        System.out.println("Game: TIED")
-        val gameOverResponse = if (turnRequest.playerLetter == PlayerLetter.X) {
-          GameOverResponse(true, Some("X"))
-        } else {
-          GameOverResponse(true, Some("O"))
-        }
-        playerX.get ! gameOverResponse
-        playerO.get ! gameOverResponse
-      }
-      else
-      {
-        System.out.println("Game: sending message to opponent")
-        val opponent = if (turnRequest.playerLetter == PlayerLetter.O) playerX.get else playerO.get
-        opponent ! OpponentTurnResponse(gridId = turnRequest.gridNum, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
-      }
+  private def handleTurnRequest(turnRequestMsg: TurnRequest) {
+    val gameStatus = board.processTurn(turnRequestMsg.gridNum.toInt, turnRequestMsg.playerLetter)
+
+    if (gameStatus == GameStatus.WON)
+      handleGameWon(turnRequestMsg)
+    else if (gameStatus == GameStatus.TIED)
+      handleGameTied(turnRequestMsg)
+    else
+      handleNextTurn(turnRequestMsg)
+  }
+
+  private def handleNextTurn(turnRequestMsg: TurnRequest) {
+    val opponent = if (turnRequestMsg.playerLetter == PlayerLetter.O) playerX.get else playerO.get
+    opponent ! OpponentTurnResponse(gridId = turnRequestMsg.gridNum, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+  }
+
+  private def handleGameWon(turnRequestMsg: TurnRequest) {
+    val gameOverResponse = if (turnRequestMsg.playerLetter == PlayerLetter.X)
+      GameOverResponse(false, Some("X"))
+    else
+      GameOverResponse(false, Some("O"))
+
+    playerX.get ! gameOverResponse
+    playerO.get ! gameOverResponse
+  }
+
+  private def handleGameTied(turnRequestMsg: TurnRequest) {
+    val gameOverResponse = if (turnRequestMsg.playerLetter == PlayerLetter.X) {
+      GameOverResponse(true, Some("X"))
+    } else {
+      GameOverResponse(true, Some("O"))
     }
+
+    playerX.get ! gameOverResponse
+    playerO.get ! gameOverResponse
+  }
+
+  private def registerPlayerForGame(requestMsg: RegisterPlayerRequest) = {
+    val player = requestMsg.player
+    sender ! RegisterPlayerResponse(self, getLetterForPlayerHopefully(player))
+    hopefullyStartGame
   }
 
   /**
@@ -97,7 +106,7 @@ class GameBoard {
 
   import actors.PlayerLetter._
 
-  /*
+  /**
    * The number of winning combinations are small, so we'll keep it simple and do "brute force" matching.
    * For a game with a larger grid (such as Go) we'd need to develop an algorithm (potentially based on
    * "Magic square" -- http://en.wikipedia.org/wiki/Magic_square)
@@ -110,16 +119,17 @@ class GameBoard {
     Array(2, 5, 8),
     Array(3, 6, 9),
     Array(1, 5, 9),
-    Array(3, 5, 7))
+    Array(3, 5, 7)
+  )
 
-  /*
+  /**
 	 * Represents a flattened game board for Tic-Tac-Toe. Below is the index value for each game cell.
 	 *
 	 * 1 | 2 | 3
 	 * 4 | 5 | 6
 	 * 7 | 8 | 9
 	 */
-  var cells = Array.fill(9)(None:Option[PlayerLetter])
+  var cells = Array.fill(9)(None: Option[PlayerLetter])
 
   /**
    * Mark the cell the player selected
@@ -133,16 +143,12 @@ class GameBoard {
    * Return the game status based on the latest turn
    */
   private def getGameStatus(player: PlayerLetter): GameStatus = {
-    // 2. return status of game
-    val status = if (isWinner(player)) {
+    if (isWinner(player))
       GameStatus.WON
-    } else if (isTied) {
+    else if (isTied)
       GameStatus.TIED
-    } else {
+    else
       GameStatus.IN_PROGRESS
-    }
-    System.out.println("status: " + status)
-    status
   }
 
   /**
@@ -157,7 +163,6 @@ class GameBoard {
         foundWinningCombo = true
       }
     }
-    System.out.println("winning combo? " + foundWinningCombo)
     foundWinningCombo
   }
 
@@ -168,14 +173,12 @@ class GameBoard {
     var boardFull = true
     var tied = false
 
-    for (cell <- cells) {
-      if (cell == None) boardFull = false
-    }
+    for (cell <- cells)
+      if (cell == None)
+        boardFull = false
 
-    System.out.println("board full: " + boardFull)
-    if (boardFull && (!isWinner(PlayerLetter.X) && !isWinner(PlayerLetter.O))) {
+    if (boardFull && (!isWinner(PlayerLetter.X) && !isWinner(PlayerLetter.O)))
       tied = true
-    }
 
     tied
   }

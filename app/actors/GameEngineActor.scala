@@ -7,15 +7,17 @@ import scala.concurrent.Await
 import akka.pattern.ask
 import scala.concurrent.duration._
 
-object GamesActor {
-  def props = Props(new GamesActor)
+object GameEngineActor {
+  def props = Props(new GameEngineActor)
 }
 
-class GamesActor extends Actor {
+class GameEngineActor extends Actor {
   def receive = {
-    // register for an existing game or create a new one and register
-    case request: RegisterPlayerRequest => if (!hopefullyRegisterForExistingGame(request)) createNewGame(request)
+    case r: RegisterPlayerRequest => handleNewPlayer(r)
   }
+
+  private def handleNewPlayer(r: RegisterPlayerRequest) =
+    if (!hopefullyRegisterForExistingGame(r)) createNewGame(r)
 
   private def hopefullyRegisterForExistingGame(request: RegisterPlayerRequest): Boolean = {
     var foundGame = false

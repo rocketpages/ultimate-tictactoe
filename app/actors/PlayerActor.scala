@@ -19,37 +19,48 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
   }
 
   def receive = {
-    case registerPlayerResponse: RegisterPlayerResponse => {
-      registerPlayerResponse.playerLetter match {
-        case Some(letter) => {
-          maybeGame = Some(registerPlayerResponse.game)
-          maybePlayerLetter = registerPlayerResponse.playerLetter
-          channel ! Json.toJson(HandshakeResponse(letter))
-        }
-        case _ => throw new RuntimeException("We shouldn't be sending back a handshake without an X or O!")
+    case r: RegisterPlayerResponse => handleRegisterResponse(r)
+    case tr: GameStartResponse => handleTurnResponse(tr)
+    case or: OpponentTurnResponse => handleOpponentResponse(or)
+    case tReq: JsValue => handleTurnRequest(tReq)
+    case go: GameOverResponse => processGameOver(go)
+  }
+
+  private def handleRegisterResponse(r: RegisterPlayerResponse) {
+    r.playerLetter match {
+      case Some(letter) => {
+        maybeGame = Some(r.game)
+        maybePlayerLetter = r.playerLetter
+        channel ! Json.toJson(HandshakeResponse(letter))
       }
+      case _ => throw new RuntimeException("We shouldn't be sending back a handshake without an X or O!")
     }
-    case turnResponse: GameStartResponse => {
-      channel ! Json.toJson(turnResponse)
-    }
-    case opponentResponse: OpponentTurnResponse => {
-      System.out.println("Game: sending message to " + maybePlayerLetter.get.toString)
-      channel ! Json.toJson(opponentResponse)
-    }
-    case turnRequest: JsValue => {
-      maybeGame match {
-        case Some(game) => {
-          val gridStr: String = (turnRequest \ "gridId").as[String]
-          val gridNum = gridStr.startsWith("grid_") match {
-            case true => gridStr.substring("grid_".length, gridStr.length)
-            case false => throw new IllegalArgumentException
-          }
-          game ! TurnRequest(maybePlayerLetter.get, gridNum)
+  }
+
+  private def handleTurnResponse(tr: GameStartResponse) {
+    channel ! Json.toJson(tr)
+  }
+
+  private def handleOpponentResponse(or: OpponentTurnResponse) {
+    System.out.println("Game: sending message to " + maybePlayerLetter.get.toString)
+    channel ! Json.toJson(or)
+  }
+
+  private def handleTurnRequest(tReq: JsValue) {
+    maybeGame match {
+      case Some(game) => {
+        val gridStr: String = (tReq \ "gridId").as[String]
+        val gridNum = gridStr.startsWith("grid_") match {
+          case true => gridStr.substring("grid_".length, gridStr.length)
+          case false => throw new IllegalArgumentException
         }
-        case _ => throw new RuntimeException("Where am I? How did I get here?")
+        game ! TurnRequest(maybePlayerLetter.get, gridNum)
       }
+      case _ => throw new RuntimeException("Where am I? How did I get here?")
     }
-    case gameOver: GameOverResponse => {
+  }
+
+  private def processGameOver(gameOver: GameOverResponse) = {
       System.out.println("maybePlayerLetter.get:" + maybePlayerLetter.get)
       System.out.println("gameOver.winningPlayer.get:" + gameOver.winningPlayer.get)
       val winningPlayer = if (gameOver.tied) {
@@ -61,7 +72,6 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
       }
       val json = GameOverPlayerResponse(winner = winningPlayer)
       channel ! Json.toJson(json)
-    }
   }
 
 }
