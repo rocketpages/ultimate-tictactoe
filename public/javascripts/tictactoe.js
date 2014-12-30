@@ -111,18 +111,28 @@ $(document).ready(function() {
     		}
  		}
 
-        /* The server has determined you are the winner and sent you this message. */
         if (message.messageType === MESSAGE_GAME_OVER) {
-            if (message.tied === "true") {
+            if (message.tied === true) {
                 $('#status').text(TIED_STATUS);
-            } else {
-                if (message.winningPlayer === player) {
-                    $('#status').text(YOU_WIN_STATUS);
-                } else {
-                    $('#status').text(YOU_LOSE_STATUS);
+
+                // update the board if you didn't make the last move
+                if (message.lastMovePlayer !== player) {
                     // add opponents last turn to your board
                     $("#grid_" + message.lastGridId).addClass(opponent);
                     $("#grid_" + message.lastGridId).html(opponent);
+                }
+            } else {
+                if (message.lastMovePlayer === player) {
+                    $('#status').text(YOU_WIN_STATUS);
+                } else {
+                    $('#status').text(YOU_LOSE_STATUS);
+
+                    // update the board if you didn't make the last move
+                    if (message.lastMovePlayer !== player) {
+                        // add opponents last turn to your board
+                        $("#grid_" + message.lastGridId).addClass(opponent);
+                        $("#grid_" + message.lastGridId).html(opponent);
+                    }
                 }
             }
         }

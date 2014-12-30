@@ -8,11 +8,11 @@ object GameOverResponse {
 
   implicit val writes: Writes[GameOverResponse] = (
     (JsPath \ "tied").write[Boolean] and
-      (JsPath \ "winningPlayer").writeNullable[String] and
+      (JsPath \ "lastMovePlayer").write[String] and
       (JsPath \ "lastGridId").write[String] and
       (JsPath \ "messageType").write[String])(unlift(GameOverResponse.unapply))
 }
 
-case class GameOverResponse(tied: Boolean, winningPlayer: Option[String], lastGridId: String, messageType: String = GameOverResponse.GAME_OVER)
+case class GameOverResponse(tied: Boolean, lastMovePlayer: String, lastGridId: String, messageType: String = GameOverResponse.GAME_OVER)
 
 

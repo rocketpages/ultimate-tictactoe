@@ -61,8 +61,6 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
   }
 
   private def processGameOver(gameOver: GameOverResponse) = {
-      System.out.println("maybePlayerLetter.get:" + maybePlayerLetter.get)
-      System.out.println("gameOver.winningPlayer.get:" + gameOver.winningPlayer.getOrElse("tied"))
       channel ! Json.toJson(gameOver)
   }
 

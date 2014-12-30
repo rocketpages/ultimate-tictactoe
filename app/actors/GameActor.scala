@@ -45,15 +45,15 @@ class GameActor extends Actor {
   }
 
   private def handleGameWon(turnRequestMsg: TurnRequest) {
-    val playerLetter = Some(turnRequestMsg.playerLetter.toString)
+    val playerLetter = turnRequestMsg.playerLetter.toString
     val gameOverResponse = GameOverResponse(false, playerLetter, turnRequestMsg.gridNum)
-
     playerX.get ! gameOverResponse
     playerO.get ! gameOverResponse
   }
 
   private def handleGameTied(turnRequestMsg: TurnRequest) {
-    val gameOverResponse = GameOverResponse(true, None, turnRequestMsg.gridNum)
+    val playerLetter = turnRequestMsg.playerLetter.toString
+    val gameOverResponse = GameOverResponse(true, playerLetter, turnRequestMsg.gridNum)
     playerX.get ! gameOverResponse
     playerO.get ! gameOverResponse
   }
@@ -150,7 +150,7 @@ class GameBoard {
    */
   private def isWinner(player: PlayerLetter): Boolean = {
     var foundWinningCombo = false
-    for (index <- 0 until WINNING.length - 1) {
+    for (index <- 0 until WINNING.length) {
       val possibleCombo = WINNING(index)
       if (cells(possibleCombo(0) - 1) == Some(player) && cells(possibleCombo(1) - 1) == Some(player) && cells(possibleCombo(2) - 1) == Some(player)) {
         foundWinningCombo = true
