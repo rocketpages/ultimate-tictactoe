@@ -1,7 +1,7 @@
 package actors
 
 import actors.PlayerLetter.PlayerLetter
-import actors.messages.{GameOverPlayerResponse, TurnRequest, RegisterPlayerResponse, RegisterPlayerRequest}
+import actors.messages.{TurnRequest, RegisterPlayerResponse, RegisterPlayerRequest}
 import akka.actor._
 import backend.messages.{GameOverResponse, OpponentTurnResponse, GameStartResponse, HandshakeResponse}
 import play.api.libs.json.{ Json, JsValue }
@@ -62,16 +62,8 @@ class PlayerActor(channel: ActorRef, gamesActor: ActorRef) extends Actor {
 
   private def processGameOver(gameOver: GameOverResponse) = {
       System.out.println("maybePlayerLetter.get:" + maybePlayerLetter.get)
-      System.out.println("gameOver.winningPlayer.get:" + gameOver.winningPlayer.get)
-      val winningPlayer = if (gameOver.tied) {
-        GameOverPlayerResponse.TIED
-      } else if (maybePlayerLetter.get.toString == gameOver.winningPlayer.get) {
-        GameOverPlayerResponse.YOU_WIN
-      } else {
-        GameOverPlayerResponse.YOU_LOSE
-      }
-      val json = GameOverPlayerResponse(winner = winningPlayer)
-      channel ! Json.toJson(json)
+      System.out.println("gameOver.winningPlayer.get:" + gameOver.winningPlayer.getOrElse("tied"))
+      channel ! Json.toJson(gameOver)
   }
 
 }
