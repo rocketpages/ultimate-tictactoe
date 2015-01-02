@@ -1,4 +1,4 @@
-package actors.messages
+package actors.messages.akka
 
 import actors.GameStatus.GameStatus
 import actors.PlayerLetter.PlayerLetter

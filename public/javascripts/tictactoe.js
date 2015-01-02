@@ -13,6 +13,7 @@ var PLAYER_X = "X";
 
 // Constants - Incoming message types
 var MESSAGE_HANDSHAKE = "handshake";
+var MESSAGE_REGISTER_GAME_RESPONSE = "register_game_response";
 var MESSAGE_OPPONENT_UPDATE = "response";
 var MESSAGE_TURN_INDICATOR = "turn";
 var MESSAGE_GAME_OVER = "GAME_OVER";
@@ -37,6 +38,9 @@ var yourTurn = false;
 
 // WebSocket connection
 var ws;
+
+// Start a timer when we try to register a game request
+var timerId;
 
 $(document).ready(function() {
 
@@ -70,17 +74,20 @@ $(document).ready(function() {
  		
  		// Process the handshake response when the page is opened
  		if (message.messageType === MESSAGE_HANDSHAKE) {
-   	 		player = message.playerLetter;
-   	 		console.debug("your player letter is " + player);
+   	 		status = message.status;
 
-   	 	 	if (player === PLAYER_X) {
-   	 	 		opponent = PLAYER_O;
-   	 	 		console.debug("your opponent is O");
-   	 	 	} else {
-   	 	 		opponent = PLAYER_X;
-   	 	 		console.debug("your opponent is X");
-   	 	 	}
- 		}
+			if (status === "ok") {
+				timerId = null;
+				sendRegisterGameRequest();
+				timerExpiryId = setTimeout(function() { displayRegisterGameErrorStatus() }, 10000);
+				$('#status').text("Finding a game.");
+			}
+			else
+			{
+				// TODO display an error message
+				console.debug("REGISTER GAME REQUEST ERROR!");
+			}
+   	 	}
  		
  		// Process your opponent's turn data.
  		if (message.messageType === MESSAGE_OPPONENT_UPDATE) {
@@ -103,6 +110,7 @@ $(document).ready(function() {
  		   the game first. Both players wait until the server gives the OK
  		   to start a game. */
  		if (message.messageType === MESSAGE_TURN_INDICATOR) {
+ 			setPlayerLetter(message.playerLetter);
  			if (message.turnIndicator === MESSAGE_TURN_INDICATOR_YOUR_TURN) {
  				yourTurn = true;
 	    		$('#status').text(YOUR_TURN_STATUS);    	 			
@@ -144,9 +152,30 @@ $(document).ready(function() {
 
 });
 
+function setPlayerLetter(yourLetter) {
+	player = yourLetter;
+
+	if (player === PLAYER_X) {
+		opponent = PLAYER_O;
+	} else {
+		opponent = PLAYER_X;
+	}
+};
+
 // Send your turn information to the server.
 function sendTurnMessage(id) {
 	var message = {messageType:"TURN", gridId:id};
 	var encoded = $.toJSON(message);
 	ws.send(encoded);
+};
+
+// Send your turn information to the server.
+function sendRegisterGameRequest() {
+	var message = {messageType:"REGISTER_GAME_REQUEST"};
+	var encoded = $.toJSON(message);
+	ws.send(encoded);
+};
+
+function displayRegisterGameErrorStatus() {
+	$('#status').text("Couldn't register you for a game.");
 };

@@ -1,9 +1,9 @@
 package actors
 
 import actors.GameStatus.GameStatus
-import actors.messages.{RegisterPlayerRequest, RegisterPlayerResponse, TurnRequest}
+import actors.messages.akka._
+import actors.messages.json._
 import akka.actor._
-import backend.messages.{GameOverResponse, OpponentTurnResponse, GameStartResponse}
 
 object GameActor {
   def props = Props(new GameActor)
@@ -15,17 +15,13 @@ class GameActor extends Actor {
 
   var playerX: Option[ActorRef] = None
   var playerO: Option[ActorRef] = None
-
   var gameStatus: GameStatus = WAITING
-
-  /**
-   * TODO: put this elsewhere. a new board should be created when the actor is created.
-   */
   val board = new GameBoard()
 
   def receive = {
-    case msg: RegisterPlayerRequest => registerPlayerForGame(msg)
+    case msg: RegisterPlayerRequest => sender ! addPlayerToGame(msg)
     case msg: TurnRequest => handleTurnRequest(msg)
+    case msg: StartGameRequest => startGame
   }
 
   private def handleTurnRequest(turnRequestMsg: TurnRequest) {
@@ -58,17 +54,20 @@ class GameActor extends Actor {
     playerO.get ! gameOverResponse
   }
 
-  private def registerPlayerForGame(requestMsg: RegisterPlayerRequest) = {
+  private def addPlayerToGame(requestMsg: RegisterPlayerRequest) = {
+    System.out.println("adding player to game...")
     val player = requestMsg.player
-    sender ! RegisterPlayerResponse(self, getLetterForPlayerHopefully(player))
-    hopefullyStartGame
+    getPlayerLetter(player) match {
+      case Some(playerLetter) => RegisterPlayerResponse(RegisterPlayerResponse.STATUS_OK, self, Some(playerLetter))
+      case _ => RegisterPlayerResponse(RegisterPlayerResponse.STATUS_GAME_FULL, self)
+    }
   }
 
   /**
    * If room exists in this game, assign them to the game and return their letter (X or O)
    * If no room exists in the game, return None instead of a PlayerLetter
    */
-  private def getLetterForPlayerHopefully(player: ActorRef): Option[PlayerLetter.PlayerLetter] = {
+  private def getPlayerLetter(player: ActorRef): Option[PlayerLetter.PlayerLetter] = {
     if (playerX == None) {
       playerX = Some(player)
       Some(PlayerLetter.X)
@@ -83,10 +82,13 @@ class GameActor extends Actor {
   /**
    * If the game has two players registered, start the game and send a message to both players
    */
-  private def hopefullyStartGame {
-    if (playerX != None && playerO != None) {
-      playerX.get ! GameStartResponse(turnIndicator = GameStartResponse.YOUR_TURN)
-      playerO.get ! GameStartResponse(turnIndicator = GameStartResponse.WAITING)
+  private def startGame {
+    System.out.println("attempting to start game...")
+    if (playerX != None && playerO != None && gameStatus == WAITING) {
+      playerX.get ! StartGameResponse(turnIndicator = GameStartResponse.YOUR_TURN, playerLetter = PlayerLetter.X, self)
+      playerO.get ! StartGameResponse(turnIndicator = GameStartResponse.WAITING, playerLetter = PlayerLetter.O, self)
+    } else {
+      throw new RuntimeException("Attempted to start game without 2 players")
     }
   }
 

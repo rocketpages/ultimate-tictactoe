@@ -1,7 +1,7 @@
-package backend.messages
+package actors.messages.json
 
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 object OpponentTurnResponse {
   val RESPONSE: String = "response"

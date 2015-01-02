@@ -9,13 +9,13 @@ import play.libs.Akka
 
 object Application extends Controller {
 
-  lazy val gamesActor = Akka.system.actorOf(Props[GameEngineActor], name = "gamesActor")
+  lazy val gameEngineActor = Akka.system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
 
   /**
    * Renders the UI
    */
   def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+    Ok(views.html.index(""))
   }
 
   /**
@@ -23,7 +23,7 @@ object Application extends Controller {
    * the actor that Play should create when it receives the WebSocket connection.
    */
   def websocket = WebSocket.acceptWithActor[JsValue, JsValue] { request => channel =>
-    PlayerActor.props(channel, gamesActor)
+    PlayerActor.props(channel, gameEngineActor)
   }
 
 }
