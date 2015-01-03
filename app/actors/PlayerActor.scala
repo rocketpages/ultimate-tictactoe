@@ -32,9 +32,11 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   private def handleJsonRequest(json: JsValue) {
     val messageType: String = (json \ "messageType").as[String]
 
-    if (messageType == "REGISTER_GAME_REQUEST") handleRegisterRequest(json)
-    else if (messageType == "TURN") handleTurnRequest(json)
-    else throw new RuntimeException("invalid json request")
+    if (messageType == "REGISTER_GAME_REQUEST")
+      handleRegisterRequest(json)
+    else if (messageType == "TURN")
+      handleTurnRequest(json)
+
     // TODO else send back error message about invalid request
   }
 
@@ -58,13 +60,13 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
           }
           case _ => {
             throw new RuntimeException("player does not belong to a game")
-            // TODO player does not belong to a game, invalid turn request
+            // TODO player does not belong to a game, invalid turn request (we should log this and restart the game, perhaps?)
           }
         }
       }
       case _ => {
         throw new RuntimeException("player does not have a letter assigned")
-        // TODO player does not have a letter assigned, invalid turn request
+        // TODO player does not have a letter assigned, invalid turn request (we should log this and restart the game, perhaps?)
       }
     }
   }
