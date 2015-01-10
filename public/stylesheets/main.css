@@ -1,0 +1,34 @@
+.tictactoe {
+    width:210px;
+}
+
+.tictactoe .cell {
+    float: left;
+    width:60px;
+    height:60px;
+    outline:1px solid #bbb;
+    padding-left: 15px;
+    padding-bottom: 10px;
+    background:white;
+    float:left;
+    font-size:40px;
+    overflow:hidden;
+    font-family: sans-serif;
+}
+
+.tictactoe div:nth-of-type(3n + 1) {
+    clear:left;
+}
+
+p {
+    clear:both;
+    padding:10px 0;
+}
+
+.tictactoe div.X {
+    color: green;
+}
+
+.tictactoe div.O {
+    color: blue;
+}

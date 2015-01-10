@@ -41,15 +41,16 @@ class GameActor extends Actor {
   }
 
   private def handleGameWon(turnRequestMsg: TurnRequest) {
-    val playerLetter = turnRequestMsg.playerLetter.toString
-    val gameOverResponse = GameOverResponse(false, playerLetter, turnRequestMsg.gridNum)
-    playerX.get ! gameOverResponse
-    playerO.get ! gameOverResponse
+    handleGameOutcome(false, turnRequestMsg)
   }
 
   private def handleGameTied(turnRequestMsg: TurnRequest) {
+    handleGameOutcome(true, turnRequestMsg)
+  }
+
+  private def handleGameOutcome(tied: Boolean, turnRequestMsg: TurnRequest) {
     val playerLetter = turnRequestMsg.playerLetter.toString
-    val gameOverResponse = GameOverResponse(true, playerLetter, turnRequestMsg.gridNum)
+    val gameOverResponse = GameOverResponse(tied, playerLetter, turnRequestMsg.gridNum)
     playerX.get ! gameOverResponse
     playerO.get ! gameOverResponse
   }

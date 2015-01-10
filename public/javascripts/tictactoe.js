@@ -77,15 +77,7 @@ $(document).ready(function() {
    	 		status = message.status;
 
 			if (status === "ok") {
-				timerId = null;
 				sendRegisterGameRequest();
-				timerExpiryId = setTimeout(function() { displayRegisterGameErrorStatus() }, 10000);
-				$('#status').text("Finding a game.");
-			}
-			else
-			{
-				// TODO display an error message
-				console.debug("REGISTER GAME REQUEST ERROR!");
 			}
    	 	}
  		
@@ -174,8 +166,4 @@ function sendRegisterGameRequest() {
 	var message = {messageType:"REGISTER_GAME_REQUEST"};
 	var encoded = $.toJSON(message);
 	ws.send(encoded);
-};
-
-function displayRegisterGameErrorStatus() {
-	$('#status').text("Couldn't register you for a game.");
 };
