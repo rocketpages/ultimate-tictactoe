@@ -1,10 +1,11 @@
-package actors
+package actors.game
 
-import actors.messages.akka._
+import model.akka._
 import akka.actor._
-import akka.util.Timeout
-import scala.concurrent.Await
 import akka.pattern.ask
+import akka.util.Timeout
+
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object GameEngineActor {
@@ -47,13 +48,16 @@ class GameEngineActor extends Actor {
   }
 
   private def createNewGame(request: RegisterPlayerRequest): ActorRef = {
-      val gameUuid = java.util.UUID.randomUUID.toString
-      val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
-      attemptRegistration(newGame, request).game
+    System.out.println("creating a new game...")
+    val gameUuid = java.util.UUID.randomUUID.toString
+    val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
+    attemptRegistration(newGame, request).game
   }
 
   private def attemptRegistration(game: ActorRef, request: RegisterPlayerRequest): RegisterPlayerResponse = {
-    implicit val timeout = Timeout(10 seconds)
+    System.out.println("attempting registration...")
+    System.out.println("actor type: " + game.toString())
+    implicit val timeout = Timeout(3 seconds)
     val future = game ? request
     Await.result(future, timeout.duration).asInstanceOf[RegisterPlayerResponse]
   }

@@ -1,4 +1,4 @@
-package actors.messages.json
+package model.json
 
 import akka.actor.ActorRef
 import play.api.libs.functional.syntax._

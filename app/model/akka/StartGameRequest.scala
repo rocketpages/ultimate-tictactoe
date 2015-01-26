@@ -1,3 +1,3 @@
-package actors.messages.akka
+package model.akka
 
 case class StartGameRequest()

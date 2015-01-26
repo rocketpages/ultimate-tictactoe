@@ -1,4 +1,4 @@
-package actors.messages.akka
+package model.akka
 
 import akka.actor.ActorRef
 

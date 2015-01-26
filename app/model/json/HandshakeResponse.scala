@@ -1,4 +1,4 @@
-package actors.messages.json
+package model.json
 
 import actors.PlayerLetter.PlayerLetter
 import play.api.libs.functional.syntax._

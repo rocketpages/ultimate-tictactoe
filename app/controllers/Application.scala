@@ -1,6 +1,7 @@
 package controllers
 
-import actors.{GameEngineActor, PlayerActor}
+import actors.game.GameEngineActor
+import actors.player.PlayerActor
 import akka.actor.Props
 import play.api.Play.current
 import play.api.libs.json.JsValue
@@ -9,7 +10,7 @@ import play.libs.Akka
 
 object Application extends Controller {
 
-  lazy val gameEngineActor = Akka.system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
+  val gameEngineActor = Akka.system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
 
   /**
    * Renders the UI
