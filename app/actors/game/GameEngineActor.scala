@@ -2,54 +2,40 @@ package actors.game
 
 import model.akka._
 import akka.actor._
-import akka.pattern.ask
-import akka.util.Timeout
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.collection.mutable.Queue
 
 object GameEngineActor {
   def props = Props(new GameEngineActor)
 }
 
 class GameEngineActor extends Actor {
+  var openGameQ = new Queue[ActorRef]
+
   def receive = {
     case r: RegisterPlayerRequest => registerPlayerForGame(r)
   }
 
   private def registerPlayerForGame(r: RegisterPlayerRequest) {
-    findOpenGame(r) match {
-      case Some(game) => game ! StartGameRequest()
-      case None => createNewGame(r)
+    val game = if (openGameQ.isEmpty) {
+      // create a new game and add it to the queue
+      val game = createNewGame(r)
+      openGameQ += game
+      game
+    } else {
+      // pull a game off the queue that is waiting for players
+      openGameQ.dequeue
     }
-  }
 
-  private def findOpenGame(request: RegisterPlayerRequest): Option[ActorRef] = {
-    for (child <- context.children) {
-      val response = attemptRegistration(child, request)
-      response.status match {
-        case RegisterPlayerResponse.STATUS_GAME_FULL => {} // do nothing, keep looking for an empty game
-        case RegisterPlayerResponse.STATUS_OK => {
-          response.playerLetter match {
-            case Some(letter) => return Some(response.game)
-            case _ => {} // keep looking
-          }
-        }
-      }
-    }
-    None
+    // register player for the game, will start the game when two players register
+    registerForGame(game, r)
   }
 
   private def createNewGame(request: RegisterPlayerRequest): ActorRef = {
     val gameUuid = java.util.UUID.randomUUID.toString
-    val newGame = context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
-    attemptRegistration(newGame, request).game
+    context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
   }
 
-  private def attemptRegistration(game: ActorRef, request: RegisterPlayerRequest): RegisterPlayerResponse = {
-    implicit val timeout = Timeout(3 seconds)
-    val future = game ? request
-    Await.result(future, timeout.duration).asInstanceOf[RegisterPlayerResponse]
-  }
+  private def registerForGame(game: ActorRef, request: RegisterPlayerRequest) = game ! request
 
 }

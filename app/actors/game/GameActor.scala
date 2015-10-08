@@ -23,8 +23,11 @@ class GameActor extends Actor {
 
   def receive = {
     case msg: TurnRequest => gameTurnActor ! TurnRequest(msg.playerLetter, msg.gridNum, playerX, playerO)
-    case msg: RegisterPlayerRequest => sender ! addPlayerToGame(msg)
-    case msg: StartGameRequest => startGame
+    case msg: RegisterPlayerRequest => {
+      sender ! addPlayerToGame(msg)
+      tryToStartGame
+    }
+
   }
 
   private def addPlayerToGame(requestMsg: RegisterPlayerRequest) = {
@@ -55,12 +58,10 @@ class GameActor extends Actor {
   /**
    * If the game has two players registered, start the game and send a message to both players
    */
-  private def startGame {
+  private def tryToStartGame {
     if (playerX != None && playerO != None && gameStatus == WAITING) {
       playerX.get ! StartGameResponse(turnIndicator = GameStartResponse.YOUR_TURN, playerLetter = PlayerLetter.X, self)
       playerO.get ! StartGameResponse(turnIndicator = GameStartResponse.WAITING, playerLetter = PlayerLetter.O, self)
-    } else {
-      throw new RuntimeException("Attempted to start game without 2 players")
     }
   }
 
