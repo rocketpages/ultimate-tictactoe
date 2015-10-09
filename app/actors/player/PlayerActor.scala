@@ -13,7 +13,6 @@ object PlayerActor {
 class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   var maybeGame: Option[ActorRef] = None
   var maybePlayerLetter: Option[PlayerLetter] = None
-
   val playerRequestProcessorActor = context.actorOf(PlayerRequestProcessorActor.props(gameEngineActor))
 
   override def preStart() {
@@ -21,7 +20,9 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   }
 
   def receive = {
+    // incoming messages
     case json: JsValue => playerRequestProcessorActor ! PlayerRequest(json, self, maybePlayerLetter, maybeGame)
+    // outbound responses
     case tr: StartGameResponse => handleStartGameResponse(tr)
     case or: OpponentTurnResponse => playerResponse(Json.toJson(or))
     case go: GameOverResponse => playerResponse(Json.toJson(go))

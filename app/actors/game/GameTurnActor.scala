@@ -53,18 +53,32 @@ class GameTurnActor extends Actor {
   var boardsWon: Array[Option[PlayerLetter]] = Array.fill(9)(None: Option[PlayerLetter])
   var boardsTied: Array[Boolean] = Array.fill(9)(false)
 
+  var validBoardId: Option[Int] = None
+
   def receive = {
     case req: TurnRequest => {
-      val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
-      if (gameStatus == GameStatus.WON) handleGameWon(req)
-      else if (gameStatus == GameStatus.TIED) handleGameTied(req)
-      else handleNextTurn(req)
+      // check to make sure the current turn is being played on a valid square
+      if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
+        val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
+
+        if (gameStatus == GameStatus.WON)
+          handleGameWon(req)
+        else if (gameStatus == GameStatus.TIED)
+          handleGameTied(req)
+        else
+          handleNextTurn(req)
+      } else {
+        // TODO invalid board being played
+        System.out.println(s"valid board: ${validBoardId}, board played: ${req.game.toInt}")
+        throw new RuntimeException("invalid board being played")
+      }
     }
   }
 
   private def handleNextTurn(req: TurnRequest) {
     val opponent = if (req.playerLetter == PlayerLetter.O) req.playerX.get else req.playerO.get
-    opponent ! OpponentTurnResponse(gridId = req.game + req.grid, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+    validBoardId = Some(req.grid.toInt)
+    opponent ! OpponentTurnResponse(gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
   }
 
   private def handleGameWon(turnRequestMsg: TurnRequest) {
@@ -86,13 +100,17 @@ class GameTurnActor extends Actor {
    * Mark the cell the player selected
    */
   def processTurn(gameNum: Int, cellNum: Int, playerLetter: PlayerLetter): GameStatus = {
+    // 1. mark the cell played with an X or an O
     games(gameNum - 1)(cellNum - 1) = Some(playerLetter)
-    val lastBoardPlayedWon = isWinner(games(gameNum - 1), playerLetter)
-    if (lastBoardPlayedWon) boardsWon(gameNum - 1) = Some(playerLetter)
-    else {
+
+    // 2. did the player win an inner game board?
+    if (isWinner(games(gameNum - 1), playerLetter)) {
+      boardsWon(gameNum - 1) = Some(playerLetter)
+    } else {
       val lastBoardPlayedTied = isTied(games(gameNum - 1))
       if (lastBoardPlayedTied) boardsTied(gameNum) = true
     }
+
     getGameStatus(playerLetter)
   }
 

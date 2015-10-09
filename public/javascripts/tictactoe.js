@@ -54,7 +54,9 @@ $(document).ready(function() {
     	  sendTurnMessage(this.id);
     	  // Add the X or O to the game board and update status.
 	      $("#" + this.id).addClass(player);
-	      $("#" + this.id).html(player);	    	  
+	      $("#" + this.id).html(player);
+	      // Disable all buttons
+	      $("[id^=cell_]").prop("disabled", true);
 	      $('#status').text(STRATEGIZING_STATUS);    	 					      
     	}
     });	
@@ -87,6 +89,8 @@ $(document).ready(function() {
  			$("#" + message.gridId).addClass(opponent);
  			$("#" + message.gridId).html(opponent);
 
+ 			// disable all cells
+
  			// Switch to your turn.
  			if (message.status == MESSAGE_GAME_OVER_YOU_WIN) {
  				$('#status').text(message.opponent + " is the winner!");
@@ -94,6 +98,8 @@ $(document).ready(function() {
  				$('#status').text(TIED_STATUS);
  			} else {
  				yourTurn = true;
+ 				// Enable all buttons for the board that is in play
+                $("[id^=cell_" + message.nextGameId + "]").prop("disabled", false);
     			$('#status').text(YOUR_TURN_STATUS);    	   	 			
     		}
  		}   	 	
@@ -107,6 +113,7 @@ $(document).ready(function() {
  				yourTurn = true;
 	    		$('#status').text(YOUR_TURN_STATUS);    	 			
     		} else if (message.turnIndicator === MESSAGE_TURN_INDICATOR_WAITING) {
+    			$("[id^=cell_]").prop("disabled", true);
 				$('#status').text(STRATEGIZING_STATUS);    	 					    	
     		}
  		}
