@@ -37,5 +37,4 @@ class GameEngineActor extends Actor {
   }
 
   private def registerForGame(game: ActorRef, request: RegisterPlayerRequest) = game ! request
-
 }

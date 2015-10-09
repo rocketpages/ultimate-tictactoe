@@ -16,5 +16,8 @@ object OpponentTurnResponse {
     (JsPath \ "status").write[String])(unlift(OpponentTurnResponse.unapply))
 }
 
-case class OpponentTurnResponse(messageType: String = OpponentTurnResponse.RESPONSE, gridId: String, status: String)
+case class OpponentTurnResponse(
+                                 messageType: String = OpponentTurnResponse.RESPONSE,
+                                 gridId: String,
+                                 status: String)
 

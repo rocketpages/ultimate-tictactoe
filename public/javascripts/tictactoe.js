@@ -46,7 +46,7 @@ $(document).ready(function() {
 
 	/* Bind to the click of all divs (tic tac toe cells) on the page
 	   We would want to qualify this if we styled the game fancier! */
-	$("div").click(function () {
+	$("button").click(function () {
 		// Only process clicks if it's your turn.
 		if (yourTurn == true) { 
 	      // Stop processing clicks and invoke sendMessage(). 
@@ -84,8 +84,8 @@ $(document).ready(function() {
  		// Process your opponent's turn data.
  		if (message.messageType === MESSAGE_OPPONENT_UPDATE) {
  			// Show their turn info on the game board.
- 			$("#grid_" + message.gridId).addClass(opponent);
- 			$("#grid_" + message.gridId).html(opponent);
+ 			$("#" + message.gridId).addClass(opponent);
+ 			$("#" + message.gridId).html(opponent);
 
  			// Switch to your turn.
  			if (message.status == MESSAGE_GAME_OVER_YOU_WIN) {
@@ -118,8 +118,8 @@ $(document).ready(function() {
                 // update the board if you didn't make the last move
                 if (message.lastMovePlayer !== player) {
                     // add opponents last turn to your board
-                    $("#grid_" + message.lastGridId).addClass(opponent);
-                    $("#grid_" + message.lastGridId).html(opponent);
+                    $("#" + message.lastGridId).addClass(opponent);
+                    $("#" + message.lastGridId).html(opponent);
                 }
             } else {
                 if (message.lastMovePlayer === player) {
@@ -130,8 +130,8 @@ $(document).ready(function() {
                     // update the board if you didn't make the last move
                     if (message.lastMovePlayer !== player) {
                         // add opponents last turn to your board
-                        $("#grid_" + message.lastGridId).addClass(opponent);
-                        $("#grid_" + message.lastGridId).html(opponent);
+                        $("#" + message.lastGridId).addClass(opponent);
+                        $("#" + message.lastGridId).html(opponent);
                     }
                 }
             }

@@ -22,7 +22,7 @@ class GameActor extends Actor {
   val gameTurnActor = context.actorOf(Props[GameTurnActor], name = "gameTurnActor")
 
   def receive = {
-    case msg: TurnRequest => gameTurnActor ! TurnRequest(msg.playerLetter, msg.gridNum, playerX, playerO)
+    case msg: TurnRequest => gameTurnActor ! TurnRequest(msg.playerLetter, msg.game, msg.grid, playerX, playerO)
     case msg: RegisterPlayerRequest => {
       sender ! addPlayerToGame(msg)
       tryToStartGame
@@ -31,7 +31,6 @@ class GameActor extends Actor {
   }
 
   private def addPlayerToGame(requestMsg: RegisterPlayerRequest) = {
-    System.out.println("adding player to game...")
     val player = requestMsg.player
     getPlayerLetter(player) match {
       case Some(playerLetter) => RegisterPlayerResponse(RegisterPlayerResponse.STATUS_OK, self, Some(playerLetter))

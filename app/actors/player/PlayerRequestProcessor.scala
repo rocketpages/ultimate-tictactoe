@@ -13,11 +13,9 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
   def receive = {
     case req: PlayerRequest => {
       val messageType: String = (req.json \ "messageType").as[String]
-
-      if (messageType == "REGISTER_GAME_REQUEST")
-        handleRegisterRequest(req.player)
-      else if (messageType == "TURN")
-        handleTurnRequest(req)
+      System.out.println(req.json)
+      if (messageType == "REGISTER_GAME_REQUEST") handleRegisterRequest(req.player)
+      else if (messageType == "TURN") handleTurnRequest(req)
     }
   }
 
@@ -29,14 +27,10 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
         req.maybeGame match {
           case Some(game) => {
             val gridStr: String = (req.json \ "gridId").as[String]
-            val gridNum = gridStr.startsWith("grid_") match {
-              case true => gridStr.substring("grid_".length, gridStr.length)
-              case false => {
-                throw new RuntimeException("player does not belong to a game")
-                // TODO we received an invalid turn request (not formatted correctly)
-              }
-            }
-            game ! TurnRequest(playerLetter, gridNum)
+            val gameId: String = gridStr.charAt(0).toString
+            val gridNum: String = gridStr.charAt(1).toString
+            System.out.println(s"Player ${req.maybePlayerLetter.get} - game: ${gameId}, grid: ${gridNum}")
+            game ! TurnRequest(playerLetter, gameId, gridNum)
           }
           case _ => {
             throw new RuntimeException("player does not belong to a game")
