@@ -27,7 +27,6 @@ var MESSAGE_TURN_INDICATOR_WAITING = "WAITING";
 var MESSAGE_GAME_OVER_YOU_WIN = "YOU_WIN";
 var MESSAGE_GAME_OVER_TIED = "TIED";
 
-// TODO substitute for real URL
 var WEBSOCKET_URL = "ws://" + window.location.host + "/websocket";
 
 
