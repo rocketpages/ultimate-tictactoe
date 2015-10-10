@@ -12,14 +12,18 @@ object OpponentTurnResponse {
 
   implicit val writes: Writes[OpponentTurnResponse] = (
     (JsPath \ "messageType").write[String] and
+    (JsPath \ "gameId").write[String] and
     (JsPath \ "gridId").write[String] and
     (JsPath \ "nextGameId").write[String] and
+    (JsPath \ "lastBoardWon").write[Boolean] and
     (JsPath \ "status").write[String])(unlift(OpponentTurnResponse.unapply))
 }
 
 case class OpponentTurnResponse(
                                  messageType: String = OpponentTurnResponse.RESPONSE,
+                                 gameId: String,
                                  gridId: String,
                                  nextGameId: String,
+                                 lastBoardWon: Boolean,
                                  status: String)
 

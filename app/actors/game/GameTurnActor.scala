@@ -57,6 +57,7 @@ class GameTurnActor extends Actor {
 
   def receive = {
     case req: TurnRequest => {
+
       // check to make sure the current turn is being played on a valid square
       if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
         val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
@@ -72,13 +73,15 @@ class GameTurnActor extends Actor {
         System.out.println(s"valid board: ${validBoardId}, board played: ${req.game.toInt}")
         throw new RuntimeException("invalid board being played")
       }
+
     }
   }
 
   private def handleNextTurn(req: TurnRequest) {
     val opponent = if (req.playerLetter == PlayerLetter.O) req.playerX.get else req.playerO.get
     validBoardId = Some(req.grid.toInt)
-    opponent ! OpponentTurnResponse(gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+    val lastBoardWon = boardsWon(req.game.toInt - 1).isDefined
+    opponent ! OpponentTurnResponse(gameId = req.game, gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, lastBoardWon = lastBoardWon, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
   }
 
   private def handleGameWon(turnRequestMsg: TurnRequest) {

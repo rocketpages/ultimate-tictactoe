@@ -44,6 +44,8 @@ var timerId;
 
 $(document).ready(function() {
 
+	$("[id^=winner_]").hide();
+
 	/* Bind to the click of all divs (tic tac toe cells) on the page
 	   We would want to qualify this if we styled the game fancier! */
 	$("button").click(function () {
@@ -89,8 +91,6 @@ $(document).ready(function() {
  			$("#" + message.gridId).addClass(opponent);
  			$("#" + message.gridId).html(opponent);
 
- 			// disable all cells
-
  			// Switch to your turn.
  			if (message.status == MESSAGE_GAME_OVER_YOU_WIN) {
  				$('#status').text(message.opponent + " is the winner!");
@@ -98,6 +98,12 @@ $(document).ready(function() {
  				$('#status').text(TIED_STATUS);
  			} else {
  				yourTurn = true;
+ 				if (message.lastBoardWon == true) {
+ 					$("[id^=tile_" + message.gameId + "]").remove();
+ 					$("#winner_" + message.gameId).html(opponent);
+ 					$("#winner_" + message.gameId).addClass("color-" + opponent);
+ 					$("#winner_" + message.gameId).show();
+ 				}
  				// Enable all buttons for the board that is in play
                 $("[id^=cell_" + message.nextGameId + "]").prop("disabled", false);
     			$('#status').text(YOUR_TURN_STATUS);    	   	 			
