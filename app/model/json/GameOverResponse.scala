@@ -10,9 +10,10 @@ object GameOverResponse {
     (JsPath \ "tied").write[Boolean] and
       (JsPath \ "lastMovePlayer").write[String] and
       (JsPath \ "lastGridId").write[String] and
+      (JsPath \ "gameId").write[String] and
       (JsPath \ "messageType").write[String])(unlift(GameOverResponse.unapply))
 }
 
-case class GameOverResponse(tied: Boolean, lastMovePlayer: String, lastGridId: String, messageType: String = GameOverResponse.GAME_OVER)
+case class GameOverResponse(tied: Boolean, lastMovePlayer: String, lastGridId: String, gameId: String, messageType: String = GameOverResponse.GAME_OVER)
 
 

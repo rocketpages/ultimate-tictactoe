@@ -1,7 +1,7 @@
 package actors.game
 
 import model.akka.{StartGameRequest, TurnRequest, RegisterPlayerRequest}
-import model.json.{GameOverResponse, OpponentTurnResponse}
+import model.json.{BoardWonResponse, GameOverResponse, OpponentTurnResponse}
 import actors.{PlayerLetter, GameStatus}
 import actors.GameStatus._
 import akka.actor.{ActorRef, Props, Actor}
@@ -78,10 +78,19 @@ class GameTurnActor extends Actor {
   }
 
   private def handleNextTurn(req: TurnRequest) {
-    val opponent = if (req.playerLetter == PlayerLetter.O) req.playerX.get else req.playerO.get
-    validBoardId = Some(req.grid.toInt)
+    val (opponent, player) = if (req.playerLetter == PlayerLetter.O)
+      (req.playerX.get, req.playerO.get)
+    else
+      (req.playerO.get, req.playerX.get)
+
     val lastBoardWon = boardsWon(req.game.toInt - 1).isDefined
-    opponent ! OpponentTurnResponse(gameId = req.game, gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, lastBoardWon = lastBoardWon, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+
+    opponent ! OpponentTurnResponse(gameId = req.game, gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, lastBoardWon = lastBoardWon, allBoardsWon = boardsWonArray, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+
+    if (lastBoardWon) {
+      System.out.println("sending board won response to player...")
+      player ! BoardWonResponse(gameId = req.game)
+    }
   }
 
   private def handleGameWon(turnRequestMsg: TurnRequest) {
@@ -94,7 +103,7 @@ class GameTurnActor extends Actor {
 
   private def handleGameOutcome(tied: Boolean, req: TurnRequest) {
     val playerLetter = req.playerLetter.toString
-    val gameOverResponse = GameOverResponse(tied, playerLetter, req.game + req.grid)
+    val gameOverResponse = GameOverResponse(tied, playerLetter, req.game + req.grid, req.game)
     req.playerX.get ! gameOverResponse
     req.playerO.get ! gameOverResponse
   }
@@ -160,5 +169,7 @@ class GameTurnActor extends Actor {
 
     tied
   }
+
+  private def boardsWonArray = boardsWon.map(x => x.getOrElse("").toString)
 
 }

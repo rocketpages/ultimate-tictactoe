@@ -17,6 +17,7 @@ var MESSAGE_REGISTER_GAME_RESPONSE = "register_game_response";
 var MESSAGE_OPPONENT_UPDATE = "response";
 var MESSAGE_TURN_INDICATOR = "turn";
 var MESSAGE_GAME_OVER = "GAME_OVER";
+var MESSAGE_BOARD_WON = "board_won";
 
 // Constants - Message turn indicator types
 var MESSAGE_TURN_INDICATOR_YOUR_TURN = "YOUR_TURN";
@@ -49,8 +50,10 @@ $(document).ready(function() {
 	/* Bind to the click of all divs (tic tac toe cells) on the page
 	   We would want to qualify this if we styled the game fancier! */
 	$("button").click(function () {
-		// Only process clicks if it's your turn.
-		if (yourTurn == true) { 
+		// Only process clicks if it's your turn AND the square hasn't already been selected
+		var buttonValue = $(this).html();
+		console.log(buttonValue);
+		if (yourTurn == true && (buttonValue.localeCompare("X") != 0 && buttonValue.localeCompare("O") != 0)) {
 	      // Stop processing clicks and invoke sendMessage(). 
 		  yourTurn = false;
     	  sendTurnMessage(this.id);
@@ -84,7 +87,15 @@ $(document).ready(function() {
 				sendRegisterGameRequest();
 			}
    	 	}
- 		
+
+ 		// Process the handshake response when the page is opened
+		if (message.messageType === MESSAGE_BOARD_WON) {
+			$("[id^=tile_" + message.gameId + "]").remove();
+			$("#winner_" + message.gameId).html(player);
+			$("#winner_" + message.gameId).addClass("color-" + player);
+			$("#winner_" + message.gameId).show();
+		}
+
  		// Process your opponent's turn data.
  		if (message.messageType === MESSAGE_OPPONENT_UPDATE) {
  			// Show their turn info on the game board.
@@ -104,8 +115,16 @@ $(document).ready(function() {
  					$("#winner_" + message.gameId).addClass("color-" + opponent);
  					$("#winner_" + message.gameId).show();
  				}
- 				// Enable all buttons for the board that is in play
-                $("[id^=cell_" + message.nextGameId + "]").prop("disabled", false);
+
+				var boardWinner = message.allBoardsWon[message.nextGameId - 1];
+ 				if (boardWinner.localeCompare("X") == 0 || boardWinner.localeCompare("O") == 0) {
+ 					// enable all boards because a "won" board was selected for the last turn
+					$("[id^=cell_]").prop("disabled", false);
+ 				} else {
+ 					// enable all buttons for the board that is in play
+                	$("[id^=cell_" + message.nextGameId + "]").prop("disabled", false);
+                }
+
     			$('#status').text(YOUR_TURN_STATUS);    	   	 			
     		}
  		}   	 	
@@ -136,16 +155,17 @@ $(document).ready(function() {
                 }
             } else {
                 if (message.lastMovePlayer === player) {
+					$("[id^=tile_" + message.gameId + "]").remove();
+					$("#winner_" + message.gameId).html(player);
+					$("#winner_" + message.gameId).addClass("color-" + player);
+					$("#winner_" + message.gameId).show();
                     $('#status').text(YOU_WIN_STATUS);
                 } else {
+					$("[id^=tile_" + message.gameId + "]").remove();
+					$("#winner_" + message.gameId).html(opponent);
+					$("#winner_" + message.gameId).addClass("color-" + opponent);
+					$("#winner_" + message.gameId).show();
                     $('#status').text(YOU_LOSE_STATUS);
-
-                    // update the board if you didn't make the last move
-                    if (message.lastMovePlayer !== player) {
-                        // add opponents last turn to your board
-                        $("#" + message.lastGridId).addClass(opponent);
-                        $("#" + message.lastGridId).html(opponent);
-                    }
                 }
             }
         }

@@ -16,6 +16,7 @@ object OpponentTurnResponse {
     (JsPath \ "gridId").write[String] and
     (JsPath \ "nextGameId").write[String] and
     (JsPath \ "lastBoardWon").write[Boolean] and
+    (JsPath \ "allBoardsWon").write[Array[String]] and
     (JsPath \ "status").write[String])(unlift(OpponentTurnResponse.unapply))
 }
 
@@ -25,5 +26,6 @@ case class OpponentTurnResponse(
                                  gridId: String,
                                  nextGameId: String,
                                  lastBoardWon: Boolean,
+                                 allBoardsWon: Array[String],
                                  status: String)
 

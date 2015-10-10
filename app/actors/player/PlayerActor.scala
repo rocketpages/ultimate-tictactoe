@@ -27,6 +27,8 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     case or: OpponentTurnResponse => playerResponse(Json.toJson(or))
     case go: GameOverResponse => playerResponse(Json.toJson(go))
     case hsr: HandshakeResponse => playerResponse(Json.toJson(hsr))
+    case bwr: BoardWonResponse => playerResponse(Json.toJson(bwr))
+    case _ => throw new Exception("unknown message type")
   }
 
   private def handleStartGameResponse(tr: StartGameResponse) {
