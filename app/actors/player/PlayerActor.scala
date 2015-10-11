@@ -5,12 +5,15 @@ import model.akka._
 import model.json._
 import play.api.libs.json.{JsValue, Json}
 import akka.actor._
+import akka.event.Logging
 
 object PlayerActor {
   def props(channel: ActorRef, gameEngineActor: ActorRef) = Props(new PlayerActor(channel, gameEngineActor))
 }
 
 class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
+  val log = Logging(context.system, this)
+
   var maybeGame: Option[ActorRef] = None
   var maybePlayerLetter: Option[PlayerLetter] = None
   val playerRequestProcessorActor = context.actorOf(PlayerRequestProcessorActor.props(gameEngineActor))
@@ -18,7 +21,10 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   private var scheduler: Cancellable = _
 
   override def preStart() {
+    // send handshake response
     self ! HandshakeResponse(HandshakeResponse.OK)
+
+    // start keepalive ping/pong to keep the websocket connection open
     import scala.concurrent.duration._
     import scala.concurrent.ExecutionContext.Implicits.global
     scheduler = context.system.scheduler.schedule(
@@ -38,7 +44,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     case go: GameOverResponse => playerResponse(Json.toJson(go))
     case hsr: HandshakeResponse => playerResponse(Json.toJson(hsr))
     case bwr: BoardWonResponse => playerResponse(Json.toJson(bwr))
-    case _ => throw new Exception("unknown message type")
+    case _ => log.error("Invalid message type")
   }
 
   private def handleStartGameResponse(tr: StartGameResponse) {

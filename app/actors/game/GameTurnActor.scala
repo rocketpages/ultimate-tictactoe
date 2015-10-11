@@ -5,6 +5,7 @@ import model.json.{BoardWonResponse, GameOverResponse, OpponentTurnResponse}
 import actors.{PlayerLetter, GameStatus}
 import actors.GameStatus._
 import akka.actor.{ActorRef, Props, Actor}
+import akka.event.Logging
 
 object GameTurnActor {
   def props = Props(new GameTurnActor)
@@ -13,6 +14,8 @@ object GameTurnActor {
 class GameTurnActor extends Actor {
 
   import actors.PlayerLetter._
+
+  val log = Logging(context.system, this)
 
   /**
    * The number of winning combinations are small, so we'll keep it simple and do "brute force" matching.
@@ -69,9 +72,7 @@ class GameTurnActor extends Actor {
         else
           handleNextTurn(req)
       } else {
-        // TODO invalid board being played
-        System.out.println(s"valid board: ${validBoardId}, board played: ${req.game.toInt}")
-        throw new RuntimeException("invalid board being played")
+        log.error("Invalid board being played (not playing a valid square)")
       }
 
     }
@@ -88,7 +89,6 @@ class GameTurnActor extends Actor {
     opponent ! OpponentTurnResponse(gameId = req.game, gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, lastBoardWon = lastBoardWon, allBoardsWon = boardsWonArray, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
 
     if (lastBoardWon) {
-      System.out.println("sending board won response to player...")
       player ! BoardWonResponse(gameId = req.game)
     }
   }

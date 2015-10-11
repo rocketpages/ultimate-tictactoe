@@ -1,6 +1,7 @@
 package actors.player
 
 import akka.actor.{Actor, Props, ActorRef}
+import akka.event.Logging
 import model.akka.{RegisterPlayerRequest, TurnRequest}
 import model.json.PlayerRequest
 
@@ -9,6 +10,8 @@ object PlayerRequestProcessorActor {
 }
 
 class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
+
+  val log = Logging(context.system, this)
 
   def receive = {
     case req: PlayerRequest => {
@@ -24,7 +27,6 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
 
     req.maybePlayerLetter match {
       case Some(playerLetter) => {
-        // 2. ensure the player belongs to a game
         req.maybeGame match {
           case Some(game) => {
             val gridStr: String = (req.json \ "gridId").as[String]
@@ -33,17 +35,14 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
             game ! TurnRequest(playerLetter, gameId, gridNum)
           }
           case _ => {
-            throw new RuntimeException("player does not belong to a game")
-            // TODO player does not belong to a game, invalid turn request (we should log this and restart the game, perhaps?)
+            log.error("player does not belong to a game")
           }
         }
       }
       case _ => {
-        throw new RuntimeException("player does not have a letter assigned")
-        // TODO player does not have a letter assigned, invalid turn request (we should log this and restart the game, perhaps?)
+        log.error("player does not have a letter assigned")
       }
     }
-
   }
 
   private def handleRegisterRequest(player: ActorRef) {
