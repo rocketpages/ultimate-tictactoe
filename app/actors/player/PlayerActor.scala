@@ -4,7 +4,7 @@ import actors.PlayerLetter.PlayerLetter
 import model.akka._
 import model.json._
 import play.api.libs.json.{JsValue, Json}
-import akka.actor.{Actor, Props, ActorRef}
+import akka.actor._
 
 object PlayerActor {
   def props(channel: ActorRef, gameEngineActor: ActorRef) = Props(new PlayerActor(channel, gameEngineActor))
@@ -15,8 +15,18 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   var maybePlayerLetter: Option[PlayerLetter] = None
   val playerRequestProcessorActor = context.actorOf(PlayerRequestProcessorActor.props(gameEngineActor))
 
+  private var scheduler: Cancellable = _
+
   override def preStart() {
     self ! HandshakeResponse(HandshakeResponse.OK)
+    import scala.concurrent.duration._
+    import scala.concurrent.ExecutionContext.Implicits.global
+    scheduler = context.system.scheduler.schedule(
+      initialDelay = 0 seconds,
+      interval = 30 seconds,
+      receiver = channel,
+      message = Json.toJson("ping")
+    )
   }
 
   def receive = {

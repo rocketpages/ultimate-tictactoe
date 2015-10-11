@@ -18,6 +18,7 @@ var MESSAGE_OPPONENT_UPDATE = "response";
 var MESSAGE_TURN_INDICATOR = "turn";
 var MESSAGE_GAME_OVER = "GAME_OVER";
 var MESSAGE_BOARD_WON = "board_won";
+var MESSAGE_KEEPALIVE = "ping";
 
 // Constants - Message turn indicator types
 var MESSAGE_TURN_INDICATOR_YOUR_TURN = "YOUR_TURN";
@@ -77,6 +78,11 @@ $(document).ready(function() {
  		var message = jQuery.parseJSON(event.data);
 
  		console.debug(message);
+
+		// respond to keepalive messages
+ 		if (message === MESSAGE_KEEPALIVE) {
+ 			console.debug("pong");
+ 		}
  		
  		// Process the handshake response when the page is opened
  		if (message.messageType === MESSAGE_HANDSHAKE) {
