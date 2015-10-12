@@ -6,11 +6,12 @@
 <head>
     <title>Tac Tac Toe</title>
 
-    <link rel="stylesheet" href='@routes.Assets.at("stylesheets/foundation.min.css")' />
+    <link rel="stylesheet" href='@routes.Assets.at("stylesheets/uikit.almost-flat.min.css")' />
     <link rel="stylesheet" href='@routes.Assets.at("stylesheets/main.css")' />
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
     <script src='@routes.Assets.at("javascripts/jquery.json-2.3.js")'></script>
+    <script src='@routes.Assets.at("javascripts/uikit.min.js")'></script>
     <script src='@routes.Assets.at("javascripts/tictactoe.js")'></script>
     <script src='@routes.Assets.at("javascripts/modernizr.js")'></script>
 
@@ -77,7 +78,7 @@
         padding: 0;
         cursor: pointer;
         vertical-align: middle;
-
+        color: #ecf0f1;
         border: 1px solid #bdc3c7;
         background-color: #ecf0f1;
     }
@@ -106,7 +107,8 @@
     .color-O { color: #e74c3c; }
 
     .winner {
-        font-size: 90px;
+        margin-top: 55px;
+        font-size: 80px;
         text-align: center;
     }
 
@@ -120,15 +122,24 @@
 
 <body>
 
-<div class="row">
-    <div class="small-12 columns">
-        <h1 style="text-align:center">ReacTacToe</h1>
+<nav class="uk-navbar">
+
+    <a class="uk-navbar-brand" href="#">Ultimate Tic Tac Toe</a>
+
+    <div class="uk-navbar-content">
+        <div class="uk-button-group">
+            <a class="uk-button" href="#">How to Play?</a>
+            <a class="uk-button" href="#">About Us</a>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="small-12 small-centered columns">
+</nav>
 
+<div class="uk-grid">
+
+
+
+    <div class="uk-width-8-10">
       <div class="game">
           <div class="area area-0-0">
               <div id="tile_11" class="tile tile-0-0">
@@ -401,24 +412,37 @@
               <div id="winner_9" class="winner">&nbsp;</div>
           </div>
       </div>
-
-
-
     </div>
-</div>
+    <div class="uk-width-2-10">
 
-<div class="row">
-    <div class="small-12 columns">
-        <div class="callout panel">
-            <p id="status" style="text-align:center">&nbsp;</p>
+        <div class="uk-panel uk-panel-box">
+
+            <h3 class="uk-panel-title">Join Existing Game</h3>
+
+            <ul class="uk-nav uk-nav-side uk-nav-parent-icon" data-uk-nav>
+
+                <li><a href="#">Item</a></li>
+                <li class="uk-nav-divider"></li>
+
+            </ul>
+
+            <a class="uk-button uk-button-primary" href="#">Start New Game</a>
+
         </div>
-    </div>
-</div>
 
-<script src='@routes.Assets.at("javascripts/foundation.min.js")'></script>
-<script>
-      $(document).foundation();
-</script>
+    </div>
+
+    <div class="uk-width-8-10" style="margin-top:1em;">
+
+        <div class="uk-width-1-2 uk-container-center">
+            <div class="uk-panel uk-panel-box">
+                <p id="status" style="text-align:center">&nbsp;</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 </html>
