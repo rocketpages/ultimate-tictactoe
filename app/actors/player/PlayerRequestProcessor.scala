@@ -21,10 +21,11 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
       else if (messageType == "TURN")
         handleTurnRequest(req)
     }
+    case _ => log.error("Invalid message type")
   }
 
   private def handleTurnRequest(req: PlayerRequest) {
-
+    System.out.println(s"handling turn request: ${req}")
     req.maybePlayerLetter match {
       case Some(playerLetter) => {
         req.maybeGame match {

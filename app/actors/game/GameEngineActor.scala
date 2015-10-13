@@ -1,5 +1,6 @@
 package actors.game
 
+import akka.event.Logging
 import model.akka._
 import akka.actor._
 
@@ -10,13 +11,16 @@ object GameEngineActor {
 }
 
 class GameEngineActor extends Actor {
+  val log = Logging(context.system, this)
+
   var openGameQ = new Queue[ActorRef]
 
   def receive = {
-    case r: RegisterPlayerRequest => registerPlayerForGame(r)
+    case r: RegisterPlayerRequest => processRegisterForGameRequest(r)
+    case _ => log.error("Invalid message type")
   }
 
-  private def registerPlayerForGame(r: RegisterPlayerRequest) {
+  private def processRegisterForGameRequest(r: RegisterPlayerRequest) {
     val game = if (openGameQ.isEmpty) {
       // create a new game and add it to the queue
       val game = createNewGame(r)
@@ -28,7 +32,7 @@ class GameEngineActor extends Actor {
     }
 
     // register player for the game, will start the game when two players register
-    registerForGame(game, r)
+    emitRegisterForGameRequest(game, r)
   }
 
   private def createNewGame(request: RegisterPlayerRequest): ActorRef = {
@@ -36,5 +40,5 @@ class GameEngineActor extends Actor {
     context.actorOf(Props[GameActor], name = "gameActor" + gameUuid)
   }
 
-  private def registerForGame(game: ActorRef, request: RegisterPlayerRequest) = game ! request
+  private def emitRegisterForGameRequest(game: ActorRef, request: RegisterPlayerRequest) = game ! request
 }

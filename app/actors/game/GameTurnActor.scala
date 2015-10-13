@@ -55,26 +55,26 @@ class GameTurnActor extends Actor {
 
   var boardsWon: Array[Option[PlayerLetter]] = Array.fill(9)(None: Option[PlayerLetter])
   var boardsTied: Array[Boolean] = Array.fill(9)(false)
-
   var validBoardId: Option[Int] = None
 
   def receive = {
-    case req: TurnRequest => {
+    case req: TurnRequest => processTurnCommand(req)
+    case _ => log.error("Invalid message type")
+  }
 
-      // check to make sure the current turn is being played on a valid square
-      if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
-        val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
-
-        if (gameStatus == GameStatus.WON)
-          handleGameWon(req)
-        else if (gameStatus == GameStatus.TIED)
-          handleGameTied(req)
-        else
-          handleNextTurn(req)
-      } else {
-        log.error("Invalid board being played (not playing a valid square)")
-      }
-
+  private def processTurnCommand(req: TurnRequest) {
+    System.out.println(s"processing turn command: ${req}")
+    // check to make sure the current turn is being played on a valid square
+    if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
+      val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
+      if (gameStatus == GameStatus.WON)
+        handleGameWon(req)
+      else if (gameStatus == GameStatus.TIED)
+        handleGameTied(req)
+      else
+        handleNextTurn(req)
+    } else {
+      log.error("Invalid board being played (not playing a valid square)")
     }
   }
 

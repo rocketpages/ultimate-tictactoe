@@ -1,69 +1,66 @@
 package actors.game
 
-import actors.GameStatus.GameStatus
 import model.akka._
 import model.json._
-import actors.{GameStatus, PlayerLetter}
+import actors.PlayerLetter
 import akka.actor._
+
+sealed trait State
+case object WaitingForFirstPlayer extends State
+case object WaitingForSecondPlayer extends State
+case object ActiveGame extends State
+case object GameOver extends State
+
+sealed trait Data
+final case class OnePlayer(val x: ActorRef) extends Data
+final case class ActiveGame(val turnActor: ActorRef, val x: ActorRef, val o: ActorRef) extends Data
+case object Uninitialized extends Data
 
 object GameActor {
   def props = Props(new GameActor)
 }
 
-class GameActor extends Actor {
+class GameActor extends FSM[State, Data] {
 
-  import actors.GameStatus._
+  startWith(WaitingForFirstPlayer, Uninitialized)
 
-  var playerX: Option[ActorRef] = None
-  var playerO: Option[ActorRef] = None
-
-  var gameStatus: GameStatus = WAITING
-
-  val gameTurnActor = context.actorOf(Props[GameTurnActor], name = "gameTurnActor")
-
-  def receive = {
-    case msg: TurnRequest => {
-      gameTurnActor ! TurnRequest(msg.playerLetter, msg.game, msg.grid, playerX, playerO)
-    }
-    case msg: RegisterPlayerRequest => {
-      sender ! addPlayerToGame(msg)
-      tryToStartGame
-    }
-
-  }
-
-  private def addPlayerToGame(requestMsg: RegisterPlayerRequest) = {
-    val player = requestMsg.player
-    getPlayerLetter(player) match {
-      case Some(playerLetter) => RegisterPlayerResponse(RegisterPlayerResponse.STATUS_OK, self, Some(playerLetter))
-      case _ => RegisterPlayerResponse(RegisterPlayerResponse.STATUS_GAME_FULL, self)
+  when(WaitingForFirstPlayer) {
+    case Event(req: RegisterPlayerRequest, Uninitialized) => {
+      goto(WaitingForSecondPlayer) using OnePlayer(req.player)
     }
   }
 
-  /**
-   * If room exists in this game, assign them to the game and return their letter (X or O)
-   * If no room exists in the game, return None instead of a PlayerLetter
-   */
-  private def getPlayerLetter(player: ActorRef): Option[PlayerLetter.PlayerLetter] = {
-    if (playerX == None) {
-      playerX = Some(player)
-      Some(PlayerLetter.X)
-    } else if (playerO == None) {
-      playerO = Some(player)
-      Some(PlayerLetter.O)
-    } else {
-      None
+  when(WaitingForSecondPlayer) {
+    case Event(req: RegisterPlayerRequest, p: OnePlayer) => {
+      goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x)
     }
   }
 
-  /**
-   * If the game has two players registered, start the game and send a message to both players
-   */
-  private def tryToStartGame {
-    if (playerX != None && playerO != None && gameStatus == WAITING) {
-      playerX.get ! StartGameResponse(turnIndicator = GameStartResponse.YOUR_TURN, playerLetter = PlayerLetter.X, self)
-      playerO.get ! StartGameResponse(turnIndicator = GameStartResponse.WAITING, playerLetter = PlayerLetter.O, self)
+  when(ActiveGame) {
+    case Event(turn: TurnRequest, game: ActiveGame) => {
+      stay using game replying {
+        game.turnActor ! TurnRequest(turn.playerLetter, turn.game, turn.grid, Some(game.x), Some(game.o))
+      }
     }
   }
+
+  onTransition {
+    case WaitingForSecondPlayer -> ActiveGame =>
+      nextStateData match {
+        case g: ActiveGame => {
+          g.x ! StartGameResponse(turnIndicator = GameStartResponse.YOUR_TURN, playerLetter = PlayerLetter.X, self)
+          g.o ! StartGameResponse(turnIndicator = GameStartResponse.WAITING, playerLetter = PlayerLetter.O, self)
+        }
+        case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
+      }
+  }
+
+  whenUnhandled {
+    case Event(msg, _) =>
+      log.warning("Received unknown event: " + msg)
+      stay
+  }
+
+  initialize()
 
 }
