@@ -32,6 +32,7 @@ libraryDependencies ++= Seq(
   jdbc,
   anorm,
   cache,
-  ws
+  ws,
+  "com.typesafe.conductr" %% "play23-conductr-bundle-lib" % "1.0.0"
 )
 
