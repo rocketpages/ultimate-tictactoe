@@ -20,6 +20,9 @@ object GameActor {
   def props = Props(new GameActor)
 }
 
+/**
+ * Model the game as a series of state transitions
+ */
 class GameActor extends FSM[State, Data] {
 
   startWith(WaitingForFirstPlayer, Uninitialized)
