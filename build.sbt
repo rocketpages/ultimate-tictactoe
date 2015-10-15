@@ -14,9 +14,7 @@ BundleKeys.roles := Set("web")
 
 BundleKeys.endpoints := Map("my-app" -> Endpoint("http", services = Set(URI("http://:9000"))))
 
-//BundleKeys.startCommand += "-Dhttp.address=$MY_APP_BIND_IP -Dhttp.port=$MY_APP_BIND_PORT"
-
-SandboxKeys.image in Global := "conductr/conductr"
+BundleKeys.startCommand += "-Dhttp.address=$MY_APP_BIND_IP -Dhttp.port=$MY_APP_BIND_PORT"
 
 SandboxKeys.imageVersion in Global := "1.0.11"
 
@@ -26,7 +24,7 @@ SandboxKeys.ports in Global := Set(1111)
 
 SandboxKeys.debugPort := 5095
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(JavaAppPackaging, PlayScala)
 
 scalaVersion := "2.11.7"
 
@@ -34,6 +32,7 @@ libraryDependencies ++= Seq(
   jdbc,
   anorm,
   cache,
-  ws
+  ws,
+  "com.typesafe.conductr" %% "play23-conductr-bundle-lib" % "1.0.0"
 )
 
