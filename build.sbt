@@ -16,9 +16,9 @@ BundleKeys.endpoints := Map("my-app" -> Endpoint("http", services = Set(URI("htt
 
 BundleKeys.startCommand += "-Dhttp.address=$MY_APP_BIND_IP -Dhttp.port=$MY_APP_BIND_PORT"
 
-SandboxKeys.imageVersion in Global := "1.0.11"
+SandboxKeys.imageVersion in Global := "1.0.12"
 
-SandboxKeys.nrOfContainers in Global := 3
+SandboxKeys.nrOfContainers in Global := 1
 
 SandboxKeys.ports in Global := Set(1111)
 

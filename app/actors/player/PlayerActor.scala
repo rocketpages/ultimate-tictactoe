@@ -44,7 +44,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     case go: GameOverResponse => playerResponse(Json.toJson(go))
     case hsr: HandshakeResponse => playerResponse(Json.toJson(hsr))
     case bwr: BoardWonResponse => playerResponse(Json.toJson(bwr))
-    case _ => log.error("Invalid message type")
+    case x => log.error("PlayerActor: Invalid message type: " + x.toString)
   }
 
   private def handleStartGameResponse(tr: StartGameResponse) {

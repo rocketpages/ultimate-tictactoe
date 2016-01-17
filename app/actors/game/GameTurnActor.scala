@@ -59,7 +59,7 @@ class GameTurnActor extends Actor {
 
   def receive = {
     case req: TurnRequest => processTurnCommand(req)
-    case _ => log.error("Invalid message type")
+    case x => log.error("GameTurnActor: Invalid message type: " + x.toString + " / sender: " + sender.toString)
   }
 
   private def processTurnCommand(req: TurnRequest) {

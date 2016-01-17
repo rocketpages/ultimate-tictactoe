@@ -21,7 +21,7 @@ class PlayerRequestProcessorActor(gameEngineActor: ActorRef) extends Actor {
       else if (messageType == "TURN")
         handleTurnRequest(req)
     }
-    case _ => log.error("Invalid message type")
+    case x => log.error("PlayerRequestProcessorActor: Invalid message type: " + x.getClass + " / sender: " + sender.toString)
   }
 
   private def handleTurnRequest(req: PlayerRequest) {
