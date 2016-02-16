@@ -1,38 +1,51 @@
-import ByteConversions._
+import sbt.Project.projectToRef
+import play.PlayImport.PlayKeys._
 
-name := """play-scala"""
+lazy val clients = Seq(client)
+lazy val scalaV = "2.11.7"
 
-version := "1.0-SNAPSHOT"
+lazy val server = (project in file("server")).settings(
+  scalaVersion := scalaV,
+  scalaJSProjects := clients,
+  pipelineStages := Seq(scalaJSProd, gzip),
+  resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
+  libraryDependencies ++= Seq(
+    filters,
+    jdbc,
+    "com.typesafe.play" %% "anorm" % "2.5.0",
+    "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
+    "com.typesafe.slick" %% "slick" % "3.0.2",
+    "com.typesafe.play" %% "play-slick" % "1.0.1",
+    "com.lihaoyi" %% "upickle" % "0.3.4",
+    "org.webjars" %% "webjars-play" % "2.4.0",
+    "org.webjars" % "bootstrap" % "3.3.5",
+    "org.webjars" % "jquery" % "2.1.4",
+    "org.webjars" % "font-awesome" % "4.4.0"
+  )
+).enablePlugins(PlayScala).
+  aggregate(clients.map(projectToRef): _*).
+  dependsOn(sharedJvm)
 
-BundleKeys.nrOfCpus := 1.0
+lazy val client = (project in file("client")).settings(
+  scalaVersion := scalaV,
+  persistLauncher := true,
+  persistLauncher in Test := false,
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.8.1",
+    "com.lihaoyi" %%% "scalatags" % "0.5.2",
+    "com.lihaoyi" %%% "scalarx" % "0.2.8",
+    "be.doeraene" %%% "scalajs-jquery" % "0.8.0",
+    "com.lihaoyi" %%% "upickle" % "0.3.4"
+  )
+).enablePlugins(ScalaJSPlugin, ScalaJSPlay).
+  dependsOn(sharedJs)
 
-BundleKeys.memory := 64.MiB
+lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
+  settings(scalaVersion := scalaV).
+  jsConfigure(_ enablePlugins ScalaJSPlay)
 
-BundleKeys.diskSpace := 10.MB
+lazy val sharedJvm = shared.jvm
+lazy val sharedJs = shared.js
 
-BundleKeys.roles := Set("web")
-
-BundleKeys.endpoints := Map("my-app" -> Endpoint("http", services = Set(URI("http://:9000"))))
-
-BundleKeys.startCommand += "-Dhttp.address=$MY_APP_BIND_IP -Dhttp.port=$MY_APP_BIND_PORT"
-
-SandboxKeys.imageVersion in Global := "1.0.12"
-
-SandboxKeys.nrOfContainers in Global := 1
-
-SandboxKeys.ports in Global := Set(1111)
-
-SandboxKeys.debugPort := 5095
-
-lazy val root = (project in file(".")).enablePlugins(JavaAppPackaging, PlayScala)
-
-scalaVersion := "2.11.7"
-
-libraryDependencies ++= Seq(
-  jdbc,
-  anorm,
-  cache,
-  ws,
-  "com.typesafe.conductr" %% "play23-conductr-bundle-lib" % "1.0.0"
-)
-
+// loads the jvm project at sbt startup
+onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
