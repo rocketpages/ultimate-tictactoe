@@ -4,6 +4,7 @@ import model.akka._
 import model.json._
 import actors.PlayerLetter
 import akka.actor._
+import shared.ServerToClientMessages.GameStartResponse
 
 sealed trait State
 case object WaitingForFirstPlayer extends State

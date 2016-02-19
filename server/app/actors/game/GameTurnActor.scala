@@ -1,11 +1,11 @@
 package actors.game
 
 import model.akka.{StartGameRequest, TurnRequest, RegisterPlayerRequest}
-import model.json.{BoardWonResponse, GameOverResponse, OpponentTurnResponse}
 import actors.{PlayerLetter, GameStatus}
 import actors.GameStatus._
 import akka.actor.{ActorRef, Props, Actor}
 import akka.event.Logging
+import shared.ServerToClientMessages.{OpponentTurnResponse, GameOverResponse, BoardWonResponse}
 
 object GameTurnActor {
   def props = Props(new GameTurnActor)
@@ -86,7 +86,7 @@ class GameTurnActor extends Actor {
 
     val lastBoardWon = boardsWon(req.game.toInt - 1).isDefined
 
-    opponent ! OpponentTurnResponse(gameId = req.game, gridId = "cell_" + req.game + req.grid, nextGameId = req.grid, lastBoardWon = lastBoardWon, allBoardsWon = boardsWonArray, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
+    opponent ! OpponentTurnResponse(gameId = req.game.toInt, gridId = req.grid.toInt, nextGameId = req.grid.toInt, lastBoardWon = lastBoardWon, boardsWonArr = boardsWonArray, status = OpponentTurnResponse.MESSAGE_YOUR_TURN)
 
     if (lastBoardWon) {
       player ! BoardWonResponse(gameId = req.game)
@@ -103,7 +103,7 @@ class GameTurnActor extends Actor {
 
   private def handleGameOutcome(tied: Boolean, req: TurnRequest) {
     val playerLetter = req.playerLetter.toString
-    val gameOverResponse = GameOverResponse(tied, playerLetter, req.game + req.grid, req.game)
+    val gameOverResponse = GameOverResponse(tied, playerLetter, req.game.toInt, req.grid.toInt)
     req.playerX.get ! gameOverResponse
     req.playerO.get ! gameOverResponse
   }
