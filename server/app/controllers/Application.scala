@@ -7,6 +7,8 @@ import play.api.Play.current
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.libs.Akka
+import shared.ServerToClientProtocol.ServerToClientWrapper
+import upickle.Js
 
 object Application extends Controller {
 
@@ -23,7 +25,7 @@ object Application extends Controller {
    * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
    * the actor that Play should create when it receives the WebSocket connection.
    */
-  def websocket = WebSocket.acceptWithActor[JsValue, JsValue] { request => channel =>
+  def websocket = WebSocket.acceptWithActor[String, String] { request => channel =>
     PlayerActor.props(channel, gameEngineActor)
   }
 

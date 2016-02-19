@@ -1,10 +1,10 @@
 package actors.game
 
-import model.akka._
-import model.json._
+import model.akka.ActorMessageProtocol.StartGameMessage
+import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
 import akka.actor._
-import shared.ServerToClientMessages.GameStartResponse
+import shared.MessageKeyConstants
 
 sealed trait State
 case object WaitingForFirstPlayer extends State
@@ -52,8 +52,8 @@ class GameActor extends FSM[State, Data] {
     case WaitingForSecondPlayer -> ActiveGame =>
       nextStateData match {
         case g: ActiveGame => {
-          g.x ! StartGameResponse(turnIndicator = GameStartResponse.YOUR_TURN, playerLetter = PlayerLetter.X, self)
-          g.o ! StartGameResponse(turnIndicator = GameStartResponse.WAITING, playerLetter = PlayerLetter.O, self)
+          g.x ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self)
+          g.o ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self)
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }

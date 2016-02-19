@@ -1,13 +1,16 @@
 package actors.player
 
 import actors.PlayerLetter.PlayerLetter
+import model.akka.ActorMessageProtocol.{StartGameMessage, RegisterPlayerRequest, TurnRequest}
 import model.akka._
 import model.json._
 import akka.actor._
 import akka.event.Logging
 import play.api.libs.json.{Json, JsValue}
+import shared.ClientToServerProtocol.{TurnCommand, ClientToServerWrapper}
+import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
-import shared.ServerToClientMessages._
+import upickle.default._
 
 object PlayerActor {
   def props(channel: ActorRef, gameEngineActor: ActorRef) = Props(new PlayerActor(channel, gameEngineActor))
@@ -18,13 +21,12 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
 
   var maybeGame: Option[ActorRef] = None
   var maybePlayerLetter: Option[PlayerLetter] = None
-  val playerRequestProcessorActor = context.actorOf(PlayerRequestProcessorActor.props(gameEngineActor))
 
   private var scheduler: Cancellable = _
 
   override def preStart() {
     // send handshake response
-    self ! HandshakeResponse(MessageKeyConstants.MESSAGE_OK)
+    self ! wrapHandshakeResponse(HandshakeResponse(status = MessageKeyConstants.MESSAGE_OK))
 
     // start keepalive ping/pong to keep the websocket connection open
     import scala.concurrent.duration._
@@ -33,30 +35,21 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
       initialDelay = 0 seconds,
       interval = 30 seconds,
       receiver = channel,
-      message = upickle.default.write[String]("ping")
+      message = upickle.default.write(wrapPing(Ping()))
     )
   }
 
   def receive = {
-    // incoming messages
-    case json: JsValue => {
-      log.debug("incoming message to akka: " + json.toString())
-      playerRequestProcessorActor ! PlayerRequest(json, self, maybePlayerLetter, maybeGame)
-    }
-    // prepare start game response
-    case tr: StartGameResponse => handleStartGameResponse(tr)
-    // direct messages to player
-    case or: OpponentTurnResponse => channel ! Json.toJson(upickle.default.write[OpponentTurnResponse](or))
-    case go: GameOverResponse => channel ! Json.toJson(upickle.default.write[GameOverResponse](go))
-    case hsr: HandshakeResponse => channel ! Json.toJson(upickle.default.write[HandshakeResponse](hsr))
-    case bwr: BoardWonResponse => channel ! Json.toJson(upickle.default.write[BoardWonResponse](bwr))
-    case x => log.error("PlayerActor: Invalid message type: " + x.toString)
+    case incoming: String => handleIncomingMessage(incoming)
+    case tr: StartGameMessage => startGame(tr)
+    case r: ServerToClientWrapper => channel ! upickle.default.write[ServerToClientWrapper](r)
+    case x => log.error("PlayerActor: Invalid message type: " + x + ", " + sender())
   }
 
-  private def handleStartGameResponse(tr: StartGameResponse) {
+  private def startGame(tr: ActorMessageProtocol.StartGameMessage) {
     setGameState(Some(tr.game), Some(tr.playerLetter))
-    val response = GameStartResponse(turnIndicator = tr.turnIndicator, playerLetter = tr.playerLetter.toString)
-    channel ! Json.toJson(upickle.default.write[GameStartResponse](response))
+    val r = wrapGameStartResponse(GameStartResponse(turnIndicator = tr.turnIndicator, playerLetter = tr.playerLetter.toString))
+    channel ! upickle.default.write[ServerToClientWrapper](r)
   }
 
   /**
@@ -66,6 +59,26 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   private def setGameState(mg: Option[ActorRef], mpl: Option[PlayerLetter]) {
     this.maybeGame = mg
     this.maybePlayerLetter = mpl
+  }
+
+  private def handleIncomingMessage(s: String): Unit = {
+    val wrapper: ClientToServerWrapper = upickle.default.read[ClientToServerWrapper](s)
+    val payload: String = upickle.default.write(wrapper.p)
+
+    wrapper.t.toString match {
+      case MessageKeyConstants.MESSAGE_REGISTER_COMMAND => gameEngineActor ! RegisterPlayerRequest(self)
+      case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
+    }
+  }
+
+  private def handleTurnRequest(c: TurnCommand) {
+    maybePlayerLetter match {
+      case Some(playerLetter) => maybeGame match {
+          case Some(game) => game ! TurnRequest(playerLetter, c.gameId.toString, c.gridId.toString)
+          case _ => log.error("player does not belong to a game")
+      }
+      case _ => log.error("player does not have a letter assigned")
+    }
   }
 
 }

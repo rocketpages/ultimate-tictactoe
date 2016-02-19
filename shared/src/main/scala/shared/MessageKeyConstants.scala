@@ -23,6 +23,8 @@ object MessageKeyConstants {
   val MESSAGE_BOARD_WON = "board_won"
   val MESSAGE_KEEPALIVE = "ping"
   val MESSAGE_OK = "OK"
+  val MESSAGE_TURN_COMMAND = "TURN_COMMAND"
+  val MESSAGE_REGISTER_COMMAND = "REGISTER_COMMAND"
 
   // Constants - Message turn indicator types
   val MESSAGE_TURN_INDICATOR_YOUR_TURN = "YOUR_TURN"
@@ -31,4 +33,6 @@ object MessageKeyConstants {
   // Constants - Game over message types
   val MESSAGE_GAME_OVER_YOU_WIN = "YOU_WIN"
   val MESSAGE_GAME_OVER_TIED = "TIED"
+
+  val GAME_START_RESPONSE_TURN = "TURN"
 }

@@ -1,17 +1,19 @@
 package tictactoe
 
-import _root_.ClientToServerMessages.Messages.{TurnMessage, RegisterGameRequest}
 import org.scalajs.dom
-import org.scalajs.dom._
-import org.scalajs.dom.raw.HTMLElement
-import org.scalajs.jquery.{JQueryEventObject, jQuery}
-import shared.ServerToClientMessages._
+import org.scalajs.dom.raw.{MessageEvent, WebSocket, HTMLElement}
+import org.scalajs.jquery.jQuery
+import shared.ServerToClientProtocol._
 import shared._
+
+import shared.ClientToServerProtocol._
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportAll
 
 import upickle.default._
+
+import scala.util.Try
 
 @JSExportAll
 object Client extends js.JSApp {
@@ -22,22 +24,15 @@ object Client extends js.JSApp {
   var player: String = ""
   var opponent: String = ""
 
-  case class GenericResponse(messageType: String)
-
   // Send your turn information to the server
-  private def sendTurnMessage(id: String) {
-    ws.get.send(write(TurnMessage(id)))
-  }
-
-  // Send your turn information to the server
-  private def sendRegisterGameRequest() {
-    ws.get.send(write(RegisterGameRequest()))
+  private def sendTurnMessage(gameId: Int, gridId: Int) {
+    ws.get.send(write[ClientToServerWrapper](wrapTurnCommand(TurnCommand(gameId, gridId))))
   }
 
   // Process the handshake response when the page is opened
   private def processHandshakeResponse(response: HandshakeResponse): Unit = {
-    if (response.messageType == MessageKeyConstants.MESSAGE_OK) {
-      sendRegisterGameRequest()
+    if (response.status == MessageKeyConstants.MESSAGE_OK) {
+      ws.get.send(write[ClientToServerWrapper](wrapRegisterGameCommand(RegisterGameCommand())))
     }
   }
 
@@ -73,13 +68,13 @@ object Client extends js.JSApp {
         }
       }
 
-      // enable all boards because a "won" board was selected for the last turn
-      if (shouldEnableAllBoardsForThisTurn(response))
-        jQuery("[id^=cell_]").prop("disabled", false)
-      else
-        jQuery("[id^=cell_" + response.nextGameId + "]").prop("disabled", false)
+        // enable all boards because a "won" board was selected for the last turn
+        if (shouldEnableAllBoardsForThisTurn(response))
+          jQuery("[id^=cell_]").prop("disabled", false)
+        else
+          jQuery("[id^=cell_" + response.nextGameId + "]").prop("disabled", false)
 
-      jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
+        jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
     }
   }
 
@@ -143,7 +138,10 @@ object Client extends js.JSApp {
 
           if (yourTurn == true && (thiz.textContent != "X" && thiz.textContent != "O")) {
             yourTurn = false
-            sendTurnMessage(thiz.id)
+            val cellId: String = thiz.id
+            val gameId = cellId.substring(5,6).toInt
+            val gridId = cellId.substring(6,7).toInt
+            sendTurnMessage(gameId, gridId)
             // Add the X or O to the game board and update status.
             jQuery("#" + thiz.id).addClass(player)
             jQuery("#" + thiz.id).html(player)
@@ -164,16 +162,26 @@ object Client extends js.JSApp {
 
       // Process turn message ("push") from the server.
       ws.get.onmessage = { (e: MessageEvent) =>
-          val data = e.data.toString
-          dom.console.log(data)
+        val data = e.data.toString
 
-          read[GenericResponse](data).messageType match {
-            case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](data))
-            case MessageKeyConstants.MESSAGE_BOARD_WON => processGameBoardWon(read[BoardWonResponse](data))
-            case MessageKeyConstants.MESSAGE_OPPONENT_UPDATE => processOpponentUpdate(read[OpponentTurnResponse](e.data.toString))
-            case MessageKeyConstants.MESSAGE_GAME_STARTED => processInitialTurn(read[GameStartResponse](e.data.toString))
-            case MessageKeyConstants.MESSAGE_GAME_OVER => processGameOver(read[GameOverResponse](e.data.toString))
+        val wrapper: ServerToClientWrapper = upickle.default.read[ServerToClientWrapper](data)
+
+        dom.console.log("wrapper type: " + wrapper.t)
+        dom.console.log("wrapper payload: " + wrapper.p)
+
+        val payload: String = upickle.default.write(wrapper.p)
+
+        wrapper.t.toString match {
+          case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload))
+          case MessageKeyConstants.MESSAGE_BOARD_WON => processGameBoardWon(read[BoardWonResponse](payload))
+          case MessageKeyConstants.MESSAGE_OPPONENT_UPDATE => processOpponentUpdate(read[OpponentTurnResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_STARTED => processInitialTurn(read[GameStartResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_OVER => processGameOver(read[GameOverResponse](payload))
+          case MessageKeyConstants.MESSAGE_KEEPALIVE => {}
+          case x => {
+            dom.console.log("unknown message type: " + x)
           }
+        }
       }
     }
   }

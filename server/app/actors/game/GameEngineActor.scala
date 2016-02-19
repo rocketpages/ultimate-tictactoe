@@ -1,7 +1,7 @@
 package actors.game
 
 import akka.event.Logging
-import model.akka._
+import model.akka.ActorMessageProtocol.RegisterPlayerRequest
 import akka.actor._
 
 import scala.collection.mutable.Queue
