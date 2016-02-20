@@ -1,5 +1,4 @@
 import sbt.Project.projectToRef
-import play.PlayImport.PlayKeys._
 
 lazy val clients = Seq(client)
 lazy val scalaV = "2.11.7"
@@ -27,7 +26,7 @@ lazy val server = (project in file("server")).settings(
 
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
-  persistLauncher := true,
+  persistLauncher := false,
   persistLauncher in Test := false,
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.5.2",

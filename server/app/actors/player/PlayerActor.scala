@@ -1,12 +1,10 @@
 package actors.player
 
 import actors.PlayerLetter.PlayerLetter
-import model.akka.ActorMessageProtocol.{StartGameMessage, RegisterPlayerRequest, TurnRequest}
+import model.akka.ActorMessageProtocol.{RegisterPlayerWithEngine, StartGameMessage, TurnRequest}
 import model.akka._
-import model.json._
 import akka.actor._
 import akka.event.Logging
-import play.api.libs.json.{Json, JsValue}
 import shared.ClientToServerProtocol.{TurnCommand, ClientToServerWrapper}
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
@@ -43,7 +41,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     case incoming: String => handleIncomingMessage(incoming)
     case tr: StartGameMessage => startGame(tr)
     case r: ServerToClientWrapper => channel ! upickle.default.write[ServerToClientWrapper](r)
-    case x => log.error("PlayerActor: Invalid message type: " + x + ", " + sender())
+    case x => log.error("Invalid message: " + x + " - " + sender())
   }
 
   private def startGame(tr: ActorMessageProtocol.StartGameMessage) {
@@ -66,7 +64,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     val payload: String = upickle.default.write(wrapper.p)
 
     wrapper.t.toString match {
-      case MessageKeyConstants.MESSAGE_REGISTER_COMMAND => gameEngineActor ! RegisterPlayerRequest(self)
+      case MessageKeyConstants.MESSAGE_REGISTER_COMMAND => gameEngineActor ! RegisterPlayerWithEngine(self)
       case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
     }
   }

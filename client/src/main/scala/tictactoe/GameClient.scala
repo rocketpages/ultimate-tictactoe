@@ -13,10 +13,8 @@ import scala.scalajs.js.annotation.JSExportAll
 
 import upickle.default._
 
-import scala.util.Try
-
 @JSExportAll
-object Client extends js.JSApp {
+object GameClient extends js.JSApp {
   // WebSocket connection
   var ws: Option[WebSocket] = None
 
@@ -121,7 +119,12 @@ object Client extends js.JSApp {
     }
   }
 
-  def main(): Unit = {
+  def main(): Unit = {}
+
+  /**
+    * Let's play a game, shall we?
+    */
+  def start(): Unit = {
     jQuery(dom.document).ready { () =>
 
       dom.console.log("i am alive!")
@@ -165,10 +168,6 @@ object Client extends js.JSApp {
         val data = e.data.toString
 
         val wrapper: ServerToClientWrapper = upickle.default.read[ServerToClientWrapper](data)
-
-        dom.console.log("wrapper type: " + wrapper.t)
-        dom.console.log("wrapper payload: " + wrapper.p)
-
         val payload: String = upickle.default.write(wrapper.p)
 
         wrapper.t.toString match {

@@ -1,14 +1,11 @@
 package controllers
 
 import actors.game.GameEngineActor
-import actors.player.PlayerActor
+import actors.player.{GameStream, PlayerActor}
 import akka.actor.Props
 import play.api.Play.current
-import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.libs.Akka
-import shared.ServerToClientProtocol.ServerToClientWrapper
-import upickle.Js
 
 object Application extends Controller {
 
@@ -22,11 +19,26 @@ object Application extends Controller {
   }
 
   /**
+    * Renders the game room
+    */
+  def game = Action {
+    Ok(views.html.game(""))
+  }
+
+  /**
    * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
    * the actor that Play should create when it receives the WebSocket connection.
    */
   def websocket = WebSocket.acceptWithActor[String, String] { request => channel =>
     PlayerActor.props(channel, gameEngineActor)
+  }
+
+  /**
+    * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
+    * the actor that Play should create when it receives the WebSocket connection.
+    */
+  def gamestream = WebSocket.acceptWithActor[String, String] { request => channel =>
+    GameStream.props(channel, gameEngineActor)
   }
 
 }

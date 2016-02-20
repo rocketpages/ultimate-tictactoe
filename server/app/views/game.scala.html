@@ -1,0 +1,395 @@
+@(message: String)
+
+@partials.template("") {
+<div class="uk-width-10-10">
+    <div class="game">
+        <div class="area area-0-0">
+            <div id="tile_11" class="tile tile-0-0">
+                <button id="cell_11" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_12" class="tile tile-1-0">
+                <button id="cell_12" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_13" class="tile tile-2-0">
+                <button id="cell_13" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_14" class="tile tile-0-1">
+                <button id="cell_14" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_15" class="tile tile-1-1">
+                <button id="cell_15" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_16" class="tile tile-2-1">
+                <button id="cell_16" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_17" class="tile tile-0-2">
+                <button id="cell_17" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_18" class="tile tile-1-2">
+                <button id="cell_18" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_19" class="tile tile-2-2">
+                <button id="cell_19" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_1" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-1-0">
+            <div id="tile_21" class="tile tile-3-0">
+                <button id="cell_21" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_22" class="tile tile-4-0">
+                <button id="cell_22" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_23" class="tile tile-5-0">
+                <button id="cell_23" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_24" class="tile tile-3-1">
+                <button id="cell_24" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_25" class="tile tile-4-1">
+                <button id="cell_25" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_26" class="tile tile-5-1">
+                <button id="cell_26" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_27" class="tile tile-3-2">
+                <button id="cell_27" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_28" class="tile tile-4-2">
+                <button id="cell_28" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_29" class="tile tile-5-2">
+                <button id="cell_29" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_2" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-2-0">
+            <div id="tile_31" class="tile tile-6-0">
+                <button id="cell_31" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_32" class="tile tile-7-0">
+                <button id="cell_32" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_33" class="tile tile-8-0">
+                <button id="cell_33" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_34" class="tile tile-6-1">
+                <button id="cell_34" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_35" class="tile tile-7-1">
+                <button id="cell_35" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_36" class="tile tile-8-1">
+                <button id="cell_36" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_37" class="tile tile-6-2">
+                <button id="cell_37" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_38" class="tile tile-7-2">
+                <button id="cell_38" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_39" class="tile tile-8-2">
+                <button id="cell_39" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_3" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-0-1">
+            <div id="tile_41" class="tile tile-0-3">
+                <button id="cell_41" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_42" class="tile tile-1-3">
+                <button id="cell_42" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_43" class="tile tile-2-3">
+                <button id="cell_43" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_44" class="tile tile-0-4">
+                <button id="cell_44" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_45" class="tile tile-1-4">
+                <button id="cell_45" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_46" class="tile tile-2-4">
+                <button id="cell_46" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_47" class="tile tile-0-5">
+                <button id="cell_47" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_48" class="tile tile-1-5">
+                <button id="cell_48" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_49" class="tile tile-2-5">
+                <button id="cell_49" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_4" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-1-1">
+            <div id="tile_51" class="tile tile-3-3">
+                <button id="cell_51" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_52" class="tile tile-4-3">
+                <button id="cell_52" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_53" class="tile tile-5-3">
+                <button id="cell_53" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_54" class="tile tile-3-4">
+                <button id="cell_54" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_55" class="tile tile-4-4">
+                <button id="cell_55" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_56" class="tile tile-5-4">
+                <button id="cell_56" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_57" class="tile tile-3-5">
+                <button id="cell_57" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_58" class="tile tile-4-5">
+                <button id="cell_58" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_59" class="tile tile-5-5">
+                <button id="cell_59" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_5" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-2-1">
+            <div id="tile_61" class="tile tile-6-3">
+                <button id="cell_61" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_62" class="tile tile-7-3">
+                <button id="cell_62" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_63" class="tile tile-8-3">
+                <button id="cell_63" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_64" class="tile tile-6-4">
+                <button id="cell_64" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_65" class="tile tile-7-4">
+                <button id="cell_65" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_66" class="tile tile-8-4">
+                <button id="cell_66" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_67" class="tile tile-6-5">
+                <button id="cell_67" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_68" class="tile tile-7-5">
+                <button id="cell_68" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_69" class="tile tile-8-5">
+                <button id="cell_69" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_6" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-0-2">
+            <div id="tile_71" class="tile tile-0-6">
+                <button id="cell_71" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_72" class="tile tile-1-6">
+                <button id="cell_72" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_73" class="tile tile-2-6">
+                <button id="cell_73" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_74" class="tile tile-0-7">
+                <button id="cell_74" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_75" class="tile tile-1-7">
+                <button id="cell_75" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_76" class="tile tile-2-7">
+                <button id="cell_76" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_77" class="tile tile-0-8">
+                <button id="cell_77" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_78" class="tile tile-1-8">
+                <button id="cell_78" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_79" class="tile tile-2-8">
+                <button id="cell_79" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_7" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-1-2">
+            <div id="tile_81" class="tile tile-3-6">
+                <button id="cell_81" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_82" class="tile tile-4-6">
+                <button id="cell_82" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_83" class="tile tile-5-6">
+                <button id="cell_83" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_84" class="tile tile-3-7">
+                <button id="cell_84" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_85" class="tile tile-4-7">
+                <button id="cell_85" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_86" class="tile tile-5-7">
+                <button id="cell_86" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_87" class="tile tile-3-8">
+                <button id="cell_87" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_88" class="tile tile-4-8">
+                <button id="cell_88" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_89" class="tile tile-5-8">
+                <button id="cell_89" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_8" class="winner">&nbsp;</div>
+        </div>
+        <div class="area area-2-2">
+            <div id="tile_91" class="tile tile-6-6">
+                <button id="cell_91" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_92" class="tile tile-7-6">
+                <button id="cell_92" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_93" class="tile tile-8-6">
+                <button id="cell_93" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_94" class="tile tile-6-7">
+                <button id="cell_94" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_95" class="tile tile-7-7">
+                <button id="cell_95" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_96" class="tile tile-8-7">
+                <button id="cell_96" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_97" class="tile tile-6-8">
+                <button id="cell_97" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_98" class="tile tile-7-8">
+                <button id="cell_98" type="button" class="tile-button"></button>
+            </div>
+            <div id="tile_99" class="tile tile-8-8">
+                <button id="cell_99" type="button" class="tile-button"></button>
+            </div>
+            <div id="winner_9" class="winner">&nbsp;</div>
+        </div>
+    </div>
+</div>
+
+<div class="uk-width-10-10" style="margin-top:1em;">
+
+    <div class="uk-width-1-2 uk-container-center">
+        <div class="uk-panel uk-panel-box">
+            <p id="status" style="text-align:center">&nbsp;</p>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+  tictactoe.GameClient().start();
+</script>
+
+<style>
+    *, *:before, *:after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    }
+
+    .game {
+    width: 400px;
+    height: 400px;
+    margin-top: 2em;
+    margin-right: auto;
+    margin-left: auto;
+    }
+
+    @@media screen and (max-width: 500px) {
+    .game {
+    width: 315px;
+    height: 315px;
+    }
+    }
+
+    .game:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+    .area {
+    float: left;
+    width: 33.333%;
+    height: 33.333%;
+    padding: 1%;
+    }
+
+    .area:nth-child(3n+1),
+    .area:nth-child(3n+2) {
+    border-right: 3px solid #7f8c8d;
+    }
+
+    .area:nth-child(n+4) {
+    border-top: 3px solid #7f8c8d;
+    }
+
+    .area:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+    .tile {
+    float: left;
+    width: 33.333%;
+    height: 33.333%;
+    padding: 1%;
+    }
+
+    .tile-button {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    cursor: pointer;
+    vertical-align: middle;
+    color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    background-color: #ecf0f1;
+    }
+
+    button:enabled:hover {
+    border-color: #f1c40f;
+    background-color: #f1c40f;
+    }
+
+    .tile-button.X {
+    background-color: #3498db;
+    border-color: #2980b9;
+    }
+
+    .tile-button.O {
+    background-color: #e74c3c;
+    border-color: #c0392b;
+    }
+
+    button[disabled=disabled], button:disabled, button:disabled:hover {
+    background-color: #95a5a6;
+    border-color: #95a5a6;
+    }
+
+    .color-X { color: #3498db; }
+    .color-O { color: #e74c3c; }
+
+    .winner {
+    margin-top: 55px;
+    font-size: 80px;
+    text-align: center;
+    }
+
+    .hidden {
+    visibility: hidden;
+    }
+
+</style>
+}

@@ -31,4 +31,5 @@ object ServerToClientProtocol {
   def wrapOpponentTurnResponse(m: OpponentTurnResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_OPPONENT_UPDATE), m)
   def wrapGameOverResponse(m: GameOverResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_OVER), m)
 
+  case class Game(uuid: String, x: Option[String], o: Option[String])
 }
