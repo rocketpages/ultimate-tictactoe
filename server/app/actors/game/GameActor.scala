@@ -4,8 +4,8 @@ import model.akka.ActorMessageProtocol.StartGameMessage
 import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
 import akka.actor._
-import shared.MessageKeyConstants
-import shared.ServerToClientProtocol.Game
+import shared.{ServerToClientProtocol, MessageKeyConstants}
+import shared.ServerToClientProtocol.{GameUpdateResponse}
 
 sealed trait State
 case object WaitingForFirstPlayer extends State
@@ -14,8 +14,8 @@ case object ActiveGame extends State
 case object GameOver extends State
 
 sealed trait Data
-final case class OnePlayer(val uuid: String, val x: ActorRef) extends Data
-final case class ActiveGame(val uuid: String, val turnActor: ActorRef, val x: ActorRef, val o: ActorRef) extends Data
+final case class OnePlayer(val uuid: String, val x: ActorRef, val xName: String) extends Data
+final case class ActiveGame(val uuid: String, val turnActor: ActorRef, val x: ActorRef, val o: ActorRef, val xName: String, val oName: String) extends Data
 case object Uninitialized extends Data
 
 object GameActor {
@@ -31,11 +31,11 @@ class GameActor extends FSM[State, Data] {
 
   when(WaitingForFirstPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
-      goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, req.player)
+      goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, req.player, req.name)
     }
     case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {
       u.subscribers.foreach(s => {
-        s ! Game(d.uuid, None, None)
+        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), None))
       })
       stay
     }
@@ -43,11 +43,11 @@ class GameActor extends FSM[State, Data] {
 
   when(WaitingForSecondPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
-      goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x)
+      goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x, p.xName, req.name)
     }
     case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {
       u.subscribers.foreach(s => {
-        s ! Game(d.uuid, None, None)
+        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), None))
       })
       stay
     }
@@ -61,7 +61,7 @@ class GameActor extends FSM[State, Data] {
     }
     case Event(u: UpdateSubscribersWithGameStatus, d: ActiveGame) => {
       u.subscribers.foreach(s => {
-        s ! Game(d.uuid, None, None)
+        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), Some(d.oName)))
       })
       stay
     }

@@ -35,7 +35,6 @@ class GameStream(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   }
 
   def receive = {
-    case g: Game => channel ! upickle.default.write[Game](g)
     case r: ServerToClientWrapper => channel ! upickle.default.write[ServerToClientWrapper](r)
     case x => log.error("Invalid message: " + x + " - " + sender())
   }
