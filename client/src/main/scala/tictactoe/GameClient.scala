@@ -21,6 +21,7 @@ object GameClient extends js.JSApp {
   var yourTurn: Boolean = false
   var player: String = ""
   var opponent: String = ""
+  var uuid: Option[String] = None
 
   // Send your turn information to the server
   private def sendTurnMessage(gameId: Int, gridId: Int) {
@@ -30,7 +31,10 @@ object GameClient extends js.JSApp {
   // Process the handshake response when the page is opened
   private def processHandshakeResponse(response: HandshakeResponse): Unit = {
     if (response.status == MessageKeyConstants.MESSAGE_OK) {
-      ws.get.send(write[ClientToServerWrapper](wrapRegisterGameCommand(RegisterGameCommand())))
+      uuid match {
+        case Some(id) => ws.get.send(write[ClientToServerWrapper](wrapJoinGameCommand(JoinGameCommand(id, "Doug"))))
+        case None => ws.get.send(write[ClientToServerWrapper](wrapCreateGameCommand(CreateGameCommand("Bob"))))
+      }
     }
   }
 
@@ -124,10 +128,15 @@ object GameClient extends js.JSApp {
   /**
     * Let's play a game, shall we?
     */
-  def start(): Unit = {
+  def start(gameId: String): Unit = {
     jQuery(dom.document).ready { () =>
 
       dom.console.log("i am alive!")
+      dom.console.log("gameId: " + gameId)
+
+      if (gameId != "") {
+        uuid = Some(gameId)
+      }
 
       val WEBSOCKET_URL = "ws://" + dom.document.location.host + "/websocket"
       ws = Some(new WebSocket(WEBSOCKET_URL))

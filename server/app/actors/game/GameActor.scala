@@ -23,14 +23,14 @@ object GameActor {
 }
 
 /**
- * Model the game as a series of state transitions
+ * Model the game engine as a finite state machine
  */
 class GameActor extends FSM[State, Data] {
 
   startWith(WaitingForFirstPlayer, Uninitialized)
 
   when(WaitingForFirstPlayer) {
-    case Event(req: RegisterPlayerWithGame, Uninitialized) => {
+    case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
       goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, req.player)
     }
     case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {
@@ -42,7 +42,7 @@ class GameActor extends FSM[State, Data] {
   }
 
   when(WaitingForSecondPlayer) {
-    case Event(req: RegisterPlayerWithGame, p: OnePlayer) => {
+    case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
       goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x)
     }
     case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {

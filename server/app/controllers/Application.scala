@@ -21,8 +21,15 @@ object Application extends Controller {
   /**
     * Renders the game room
     */
-  def game = Action {
+  def createGame = Action {
     Ok(views.html.game(""))
+  }
+
+  /**
+    * Renders the game room
+    */
+  def game(uuid: String) = Action {
+    Ok(views.html.game(uuid))
   }
 
   /**

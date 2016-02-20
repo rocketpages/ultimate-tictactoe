@@ -1,11 +1,11 @@
 package actors.player
 
 import actors.PlayerLetter.PlayerLetter
-import model.akka.ActorMessageProtocol.{RegisterPlayerWithEngine, StartGameMessage, TurnRequest}
+import model.akka.ActorMessageProtocol.{JoinGameMessage, CreateGameMessage, StartGameMessage, TurnRequest}
 import model.akka._
 import akka.actor._
 import akka.event.Logging
-import shared.ClientToServerProtocol.{TurnCommand, ClientToServerWrapper}
+import shared.ClientToServerProtocol.{JoinGameCommand, TurnCommand, ClientToServerWrapper}
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
 import upickle.default._
@@ -64,7 +64,10 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     val payload: String = upickle.default.write(wrapper.p)
 
     wrapper.t.toString match {
-      case MessageKeyConstants.MESSAGE_REGISTER_COMMAND => gameEngineActor ! RegisterPlayerWithEngine(self)
+      case MessageKeyConstants.MESSAGE_JOIN_GAME_COMMAND => {
+        gameEngineActor ! JoinGameMessage(self, "Doug", read[JoinGameCommand](payload).uuid)
+      }
+      case MessageKeyConstants.MESSAGE_CREATE_GAME_COMMAND => gameEngineActor ! CreateGameMessage(self, "Bob")
       case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
     }
   }
