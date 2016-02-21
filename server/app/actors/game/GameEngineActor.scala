@@ -31,7 +31,7 @@ class GameEngineActor extends Actor {
 
       // notify subscribers of event
       games.values.foreach(g => {
-        subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.get, g.oName.get)))
+        subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse(""))))
       })
     }
     case c: CreateGameMessage => {
