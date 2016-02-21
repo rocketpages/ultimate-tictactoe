@@ -48,3 +48,5 @@ lazy val sharedJs = shared.js
 
 // loads the jvm project at sbt startup
 onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
+
+herokuAppName in Compile := "ultimate-tictactoe"
