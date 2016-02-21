@@ -20,7 +20,8 @@ object ServerToClientProtocol {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
 
-  case class GameUpdateResponse(uuid: String, x: Option[String], o: Option[String]) extends Payload
+  case class GameCreatedEvent(uuid: String, x: String) extends Payload
+  case class GameStartedEvent(uuid: String, x: String, o: String) extends Payload
 
   type MessageType = String
 
@@ -32,5 +33,7 @@ object ServerToClientProtocol {
   def wrapPing(m: Ping) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_KEEPALIVE), m)
   def wrapOpponentTurnResponse(m: OpponentTurnResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_OPPONENT_UPDATE), m)
   def wrapGameOverResponse(m: GameOverResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_OVER), m)
-  def wrapGameUpdateResponse(m: GameUpdateResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_UPDATE), m)
+
+  def wrapGameCreatedEvent(m: GameCreatedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_NEW_GAME_CREATED_EVENT), m)
+  def wrapGameStartedEvent(m: GameStartedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STARTED_EVENT), m)
 }

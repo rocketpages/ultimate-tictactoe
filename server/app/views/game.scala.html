@@ -1,4 +1,4 @@
-@(uuid: String)
+@(name: String, uuid: Option[String])
 
 @partials.template("") {
 <div class="uk-width-10-10">
@@ -287,7 +287,7 @@
 </div>
 
 <script type="text/javascript">
-  tictactoe.GameClient().start("@uuid");
+    tictactoe.GameClient().start("@name", "@uuid");
 </script>
 
 <style>

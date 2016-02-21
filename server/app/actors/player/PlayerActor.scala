@@ -5,7 +5,7 @@ import model.akka.ActorMessageProtocol.{JoinGameMessage, CreateGameMessage, Star
 import model.akka._
 import akka.actor._
 import akka.event.Logging
-import shared.ClientToServerProtocol.{JoinGameCommand, TurnCommand, ClientToServerWrapper}
+import shared.ClientToServerProtocol.{CreateGameCommand, JoinGameCommand, TurnCommand, ClientToServerWrapper}
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
 import upickle.default._
@@ -65,9 +65,13 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
 
     wrapper.t.toString match {
       case MessageKeyConstants.MESSAGE_JOIN_GAME_COMMAND => {
-        gameEngineActor ! JoinGameMessage(self, "Doug", read[JoinGameCommand](payload).uuid)
+        val pl = read[JoinGameCommand](payload)
+        gameEngineActor ! JoinGameMessage(self, pl.name, pl.uuid)
       }
-      case MessageKeyConstants.MESSAGE_CREATE_GAME_COMMAND => gameEngineActor ! CreateGameMessage(self, "Bob")
+      case MessageKeyConstants.MESSAGE_CREATE_GAME_COMMAND => {
+        val pl = read[CreateGameCommand](payload)
+        gameEngineActor ! CreateGameMessage(self, pl.name)
+      }
       case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
     }
   }

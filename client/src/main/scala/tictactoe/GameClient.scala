@@ -29,11 +29,11 @@ object GameClient extends js.JSApp {
   }
 
   // Process the handshake response when the page is opened
-  private def processHandshakeResponse(response: HandshakeResponse): Unit = {
+  private def processHandshakeResponse(response: HandshakeResponse, name: String): Unit = {
     if (response.status == MessageKeyConstants.MESSAGE_OK) {
       uuid match {
-        case Some(id) => ws.get.send(write[ClientToServerWrapper](wrapJoinGameCommand(JoinGameCommand(id, "Doug"))))
-        case None => ws.get.send(write[ClientToServerWrapper](wrapCreateGameCommand(CreateGameCommand("Bob"))))
+        case Some(id) => ws.get.send(write[ClientToServerWrapper](wrapJoinGameCommand(JoinGameCommand(id, name))))
+        case None => ws.get.send(write[ClientToServerWrapper](wrapCreateGameCommand(CreateGameCommand(name))))
       }
     }
   }
@@ -128,15 +128,12 @@ object GameClient extends js.JSApp {
   /**
     * Let's play a game, shall we?
     */
-  def start(gameId: String): Unit = {
+  def start(name: String, gameId: String): Unit = {
     jQuery(dom.document).ready { () =>
 
       dom.console.log("i am alive!")
-      dom.console.log("gameId: " + gameId)
 
-      if (gameId != "") {
-        uuid = Some(gameId)
-      }
+      if (gameId != "") uuid = Some(gameId)
 
       val WEBSOCKET_URL = "ws://" + dom.document.location.host + "/websocket"
       ws = Some(new WebSocket(WEBSOCKET_URL))
@@ -180,7 +177,7 @@ object GameClient extends js.JSApp {
         val payload: String = upickle.default.write(wrapper.p)
 
         wrapper.t.toString match {
-          case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload))
+          case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload), name)
           case MessageKeyConstants.MESSAGE_BOARD_WON => processGameBoardWon(read[BoardWonResponse](payload))
           case MessageKeyConstants.MESSAGE_OPPONENT_UPDATE => processOpponentUpdate(read[OpponentTurnResponse](payload))
           case MessageKeyConstants.MESSAGE_GAME_STARTED => processInitialTurn(read[GameStartResponse](payload))

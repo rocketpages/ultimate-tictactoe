@@ -6,6 +6,8 @@ import akka.actor.Props
 import play.api.Play.current
 import play.api.mvc._
 import play.libs.Akka
+import model.forms.Forms._
+import play.api.i18n.Messages.Implicits._
 
 object Application extends Controller {
 
@@ -15,21 +17,24 @@ object Application extends Controller {
    * Renders the UI
    */
   def index = Action {
-    Ok(views.html.index(""))
+    Ok(views.html.index(gameForm))
   }
 
   /**
     * Renders the game room
     */
-  def createGame = Action {
-    Ok(views.html.game(""))
+  def createGame = Action { implicit request =>
+    gameForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.index(formWithErrors)),
+      f => Ok(views.html.game(f.name, None))
+    )
   }
 
   /**
     * Renders the game room
     */
-  def game(uuid: String) = Action {
-    Ok(views.html.game(uuid))
+  def game(name: String, uuid: String) = Action {
+    Ok(views.html.game(name, Some(uuid)))
   }
 
   /**

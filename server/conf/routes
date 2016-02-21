@@ -4,8 +4,8 @@
 
 # Home page
 GET     /                           controllers.Application.index
-GET     /game                       controllers.Application.createGame
-GET     /game/:uuid                 controllers.Application.game(uuid: String)
+POST    /game                       controllers.Application.createGame
+GET     /game/:name/:uuid           controllers.Application.game(name: String, uuid: String)
 
 GET     /websocket                  controllers.Application.websocket
 GET     /gamestream                 controllers.Application.gamestream

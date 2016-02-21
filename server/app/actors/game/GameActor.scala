@@ -4,8 +4,7 @@ import model.akka.ActorMessageProtocol.StartGameMessage
 import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
 import akka.actor._
-import shared.{ServerToClientProtocol, MessageKeyConstants}
-import shared.ServerToClientProtocol.{GameUpdateResponse}
+import shared.MessageKeyConstants
 
 sealed trait State
 case object WaitingForFirstPlayer extends State
@@ -33,23 +32,11 @@ class GameActor extends FSM[State, Data] {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
       goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, req.player, req.name)
     }
-    case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {
-      u.subscribers.foreach(s => {
-        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), None))
-      })
-      stay
-    }
   }
 
   when(WaitingForSecondPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
       goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x, p.xName, req.name)
-    }
-    case Event(u: UpdateSubscribersWithGameStatus, d: OnePlayer) => {
-      u.subscribers.foreach(s => {
-        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), None))
-      })
-      stay
     }
   }
 
@@ -58,12 +45,6 @@ class GameActor extends FSM[State, Data] {
       stay using game replying {
         game.turnActor ! TurnRequest(turn.playerLetter, turn.game, turn.grid, Some(game.x), Some(game.o))
       }
-    }
-    case Event(u: UpdateSubscribersWithGameStatus, d: ActiveGame) => {
-      u.subscribers.foreach(s => {
-        s ! ServerToClientProtocol.wrapGameUpdateResponse(new GameUpdateResponse(d.uuid, Some(d.xName), Some(d.oName)))
-      })
-      stay
     }
   }
 

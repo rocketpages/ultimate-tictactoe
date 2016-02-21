@@ -1,15 +1,17 @@
-@(message: String)
+@import model.forms.Forms._
+
+@(gameForm: Form[GameData])(implicit messages: Messages)
 
 @partials.template("") {
 <div class="uk-width-1-10"></div>
 <div class="left uk-width-4-10">
-        <form class="uk-form" style="margin-top:30px;">
+        @helper.form(action = routes.Application.createGame(), 'class -> "uk-form", 'style -> "margin-top: 30px") {
             <fieldset data-uk-margin>
                 <legend>Start a new game</legend>
-                <input type="text" placeholder="Your name">
+                <input type="text" name="name" id="name" placeholder="Your name">
                 <button class="uk-button">Go!</button>
             </fieldset>
-        </form>
+        }
 </div>
 <div class="right uk-width-4-10">
     <form class="uk-form" style="margin-top:30px;">
@@ -26,18 +28,7 @@
                 <th></th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>Jeff</td>
-                <td><small>waiting</small></td>
-                <td><a href="/game">Join Game!</a></td>
-            </tr>
-            <tr>
-                <td>Bob</td>
-                <td><small>waiting</small></td>
-                <td><a href="/game">Join Game!</a></td>
-            </tr>
-        </tbody>
+        <tbody id="gameList"></tbody>
     </table>
 </div></div>
 <div class="uk-width-1-10"></div>
