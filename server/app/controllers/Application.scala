@@ -26,15 +26,18 @@ object Application extends Controller {
   def createGame = Action { implicit request =>
     gameForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.index(formWithErrors)),
-      f => Ok(views.html.game(f.name, None))
+      f => Ok(views.html.game(Some(f.nameX), None, None))
     )
   }
 
   /**
     * Renders the game room
     */
-  def game(name: String, uuid: String) = Action {
-    Ok(views.html.game(name, Some(uuid)))
+  def joinGame = Action { implicit request =>
+    joinGameForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.index(gameForm)),
+      f => Ok(views.html.game(Some(f.nameX), Some(f.nameO), Some(f.uuid)))
+    )
   }
 
   /**

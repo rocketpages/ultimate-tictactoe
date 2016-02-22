@@ -52,8 +52,8 @@ class GameActor extends FSM[State, Data] {
     case WaitingForSecondPlayer -> ActiveGame =>
       nextStateData match {
         case g: ActiveGame => {
-          g.x ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self)
-          g.o ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self)
+          g.x ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.xName, g.oName)
+          g.o ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.xName, g.oName)
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }

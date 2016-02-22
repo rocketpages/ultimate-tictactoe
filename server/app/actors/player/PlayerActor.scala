@@ -46,7 +46,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
 
   private def startGame(tr: ActorMessageProtocol.StartGameMessage) {
     setGameState(Some(tr.game), Some(tr.playerLetter))
-    val r = wrapGameStartResponse(GameStartResponse(turnIndicator = tr.turnIndicator, playerLetter = tr.playerLetter.toString))
+    val r = wrapGameStartResponse(GameStartResponse(turnIndicator = tr.turnIndicator, playerLetter = tr.playerLetter.toString, nameX = tr.nameX, nameO = tr.nameO))
     channel ! upickle.default.write[ServerToClientWrapper](r)
   }
 
@@ -66,11 +66,11 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     wrapper.t.toString match {
       case MessageKeyConstants.MESSAGE_JOIN_GAME_COMMAND => {
         val pl = read[JoinGameCommand](payload)
-        gameEngineActor ! JoinGameMessage(self, pl.name, pl.uuid)
+        gameEngineActor ! JoinGameMessage(self, pl.nameO, pl.uuid)
       }
       case MessageKeyConstants.MESSAGE_CREATE_GAME_COMMAND => {
         val pl = read[CreateGameCommand](payload)
-        gameEngineActor ! CreateGameMessage(self, pl.name)
+        gameEngineActor ! CreateGameMessage(self, pl.nameX)
       }
       case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
     }

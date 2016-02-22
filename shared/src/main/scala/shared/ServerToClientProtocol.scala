@@ -6,7 +6,7 @@ object ServerToClientProtocol {
 
   case class BoardWonResponse(gameId: String) extends Payload
 
-  case class GameStartResponse(turnIndicator: String, playerLetter: String) extends Payload
+  case class GameStartResponse(turnIndicator: String, playerLetter: String, nameX: String, nameO: String) extends Payload
 
   case class HandshakeResponse(status: String) extends Payload
 

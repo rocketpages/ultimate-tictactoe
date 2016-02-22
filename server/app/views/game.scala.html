@@ -1,6 +1,26 @@
-@(name: String, uuid: Option[String])
+@(nameX: Option[String], nameO: Option[String], uuid: Option[String])
 
 @partials.template("") {
+
+
+    <div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
+    <div class="uk-width-medium-3-10" style="margin-top: 10px;">
+        <div class="uk-panel-box">
+            <span id="nameX">@nameX</span>
+        </div>
+    </div>
+    <div class="uk-width-medium-2-10 uk-height-1-1" style="margin-top: 10px;">
+        <div class="uk-panel">
+            <p class="uk-vertical-align-middle uk-align-center">Vs</p>
+        </div>
+    </div>
+    <div class="uk-width-medium-3-10" style="margin-top: 10px;">
+        <div class="uk-panel-box">
+            <span id="nameO">@nameO.getOrElse("waiting...")</span>
+        </div>
+    </div>
+    <div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
+
 <div class="uk-width-10-10">
     <div class="game">
         <div class="area area-0-0">
@@ -287,7 +307,7 @@
 </div>
 
 <script type="text/javascript">
-    tictactoe.GameClient().start("@name", "@uuid");
+    tictactoe.GameClient().start("@nameX", "@nameO", "@uuid");
 </script>
 
 <style>

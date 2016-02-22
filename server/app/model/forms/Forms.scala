@@ -5,11 +5,20 @@ import play.api.data.Forms._
 
 object Forms {
 
-  case class GameData(name: String)
+  case class GameData(nameX: String)
   val gameForm = Form(
     mapping(
-      "name" -> nonEmptyText
+      "nameX" -> nonEmptyText
     )(GameData.apply)(GameData.unapply)
+  )
+
+  case class JoinGameData(nameX: String, nameO: String, uuid: String)
+  val joinGameForm = Form(
+    mapping(
+      "nameX" -> nonEmptyText,
+      "nameO" -> nonEmptyText,
+      "uuid" -> nonEmptyText
+    )(JoinGameData.apply)(JoinGameData.unapply)
   )
 
 }

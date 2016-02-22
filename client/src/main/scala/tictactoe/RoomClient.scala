@@ -42,9 +42,14 @@ object RoomClient extends js.JSApp {
           val elem =
             tr(id:="game-" + pl.uuid,
               td(p(xName)),
-              td(p("")),
-              td(
-                a(href := "/game/" + "Doug/" + pl.uuid)(p("Join game"))
+              td(raw("<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
+                  "<fieldset data-uk-margin>" +
+                    "<input type=\"text\" name=\"nameO\" id=\"nameO\" placeholder=\"Your name\">" +
+                    "<input type=\"hidden\" name=\"nameX\" value=\"" + xName + "\">" +
+                    "<input type=\"hidden\" name=\"uuid\" value=\"" + pl.uuid + "\">" +
+                    "<button class=\"uk-button\">Join game!</button>" +
+                  "</fieldset>" +
+                "</form>")
               )
             ).render
 
@@ -58,8 +63,7 @@ object RoomClient extends js.JSApp {
           val elem =
             tr(id:="game-" + pl.uuid,
               td(p(xName)),
-              td(p(oName)),
-              td()
+              td(p(oName))
             ).render
 
           jQuery("#game-" + pl.uuid).remove()

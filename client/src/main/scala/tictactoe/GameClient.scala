@@ -29,11 +29,11 @@ object GameClient extends js.JSApp {
   }
 
   // Process the handshake response when the page is opened
-  private def processHandshakeResponse(response: HandshakeResponse, name: String): Unit = {
+  private def processHandshakeResponse(response: HandshakeResponse, nameX: String, nameO: String): Unit = {
     if (response.status == MessageKeyConstants.MESSAGE_OK) {
       uuid match {
-        case Some(id) => ws.get.send(write[ClientToServerWrapper](wrapJoinGameCommand(JoinGameCommand(id, name))))
-        case None => ws.get.send(write[ClientToServerWrapper](wrapCreateGameCommand(CreateGameCommand(name))))
+        case Some(id) => ws.get.send(write[ClientToServerWrapper](wrapJoinGameCommand(JoinGameCommand(id, nameX, nameO))))
+        case None => ws.get.send(write[ClientToServerWrapper](wrapCreateGameCommand(CreateGameCommand(nameX))))
       }
     }
   }
@@ -87,6 +87,7 @@ object GameClient extends js.JSApp {
 
   private def processInitialTurn(response: GameStartResponse): Unit = {
     setPlayerLetter(response.playerLetter)
+    jQuery("#nameO").text(response.nameO)
     if (response.turnIndicator == MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN) {
       yourTurn = true
       jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
@@ -128,7 +129,7 @@ object GameClient extends js.JSApp {
   /**
     * Let's play a game, shall we?
     */
-  def start(name: String, gameId: String): Unit = {
+  def start(nameX: String, nameO: String, gameId: String): Unit = {
     jQuery(dom.document).ready { () =>
 
       dom.console.log("i am alive!")
@@ -177,7 +178,7 @@ object GameClient extends js.JSApp {
         val payload: String = upickle.default.write(wrapper.p)
 
         wrapper.t.toString match {
-          case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload), name)
+          case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload), nameX, nameO)
           case MessageKeyConstants.MESSAGE_BOARD_WON => processGameBoardWon(read[BoardWonResponse](payload))
           case MessageKeyConstants.MESSAGE_OPPONENT_UPDATE => processOpponentUpdate(read[OpponentTurnResponse](payload))
           case MessageKeyConstants.MESSAGE_GAME_STARTED => processInitialTurn(read[GameStartResponse](payload))
