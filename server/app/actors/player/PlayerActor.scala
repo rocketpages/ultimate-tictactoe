@@ -11,10 +11,10 @@ import shared.MessageKeyConstants
 import upickle.default._
 
 object PlayerActor {
-  def props(channel: ActorRef, gameEngineActor: ActorRef) = Props(new PlayerActor(channel, gameEngineActor))
+  def props(out: ActorRef, gameEngineActor: ActorRef) = Props(new PlayerActor(out, gameEngineActor))
 }
 
-class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
+class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
   val log = Logging(context.system, this)
 
   var maybeGame: Option[ActorRef] = None
@@ -32,7 +32,7 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     scheduler = context.system.scheduler.schedule(
       initialDelay = 0 seconds,
       interval = 30 seconds,
-      receiver = channel,
+      receiver = out,
       message = upickle.default.write(wrapPing(Ping()))
     )
   }
@@ -40,14 +40,14 @@ class PlayerActor(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
   def receive = {
     case incoming: String => handleIncomingMessage(incoming)
     case tr: StartGameMessage => startGame(tr)
-    case r: ServerToClientWrapper => channel ! upickle.default.write[ServerToClientWrapper](r)
-    case x => log.error("Invalid message: " + x + " - " + sender())
+    case r: ServerToClientWrapper => out ! upickle.default.write[ServerToClientWrapper](r)
+    case x => log.error("Invalid message: " + x.getClass + " - " + sender())
   }
 
   private def startGame(tr: ActorMessageProtocol.StartGameMessage) {
     setGameState(Some(tr.game), Some(tr.playerLetter))
     val r = wrapGameStartResponse(GameStartResponse(turnIndicator = tr.turnIndicator, playerLetter = tr.playerLetter.toString, nameX = tr.nameX, nameO = tr.nameO))
-    channel ! upickle.default.write[ServerToClientWrapper](r)
+    out ! upickle.default.write[ServerToClientWrapper](r)
   }
 
   /**

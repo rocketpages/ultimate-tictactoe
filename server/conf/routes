@@ -3,12 +3,12 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
-POST    /game                       controllers.Application.createGame
-POST    /game/join                  controllers.Application.joinGame
+GET     /                           controllers.HomeController.index
+POST    /game                       controllers.HomeController.createGame
+POST    /game/join                  controllers.HomeController.joinGame
 
-GET     /websocket                  controllers.Application.websocket
-GET     /gamestream                 controllers.Application.gamestream
+GET     /websocket                  controllers.HomeController.websocket
+GET     /gamestream                 controllers.HomeController.gamestream
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

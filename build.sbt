@@ -6,6 +6,7 @@ lazy val scalaV = "2.11.7"
 lazy val server = (project in file("server")).settings(
   scalaVersion := scalaV,
   scalaJSProjects := clients,
+  routesGenerator := InjectedRoutesGenerator,
   pipelineStages := Seq(scalaJSProd, gzip),
   resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
   libraryDependencies ++= Seq(

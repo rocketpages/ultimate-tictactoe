@@ -53,6 +53,11 @@ class GameEngineActor extends Actor {
     // register the sender as a subscriber to game updates
     case RegisterGameStreamSubscriber => {
       subscribers += sender()
+
+      // notify subscribers of event
+      games.values.foreach(g => {
+        sender() ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse("")))
+      })
     }
     case x => log.error("Invalid type in receive - ", x)
   }

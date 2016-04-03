@@ -8,10 +8,10 @@ import shared.MessageKeyConstants
 import upickle.default._
 
 object GameStream {
-  def props(channel: ActorRef, gameEngineActor: ActorRef) = Props(new GameStream(channel, gameEngineActor))
+  def props(out: ActorRef, gameEngineActor: ActorRef) = Props(new GameStream(out, gameEngineActor))
 }
 
-class GameStream(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
+class GameStream(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
   val log = Logging(context.system, this)
 
   private var scheduler: Cancellable = _
@@ -29,13 +29,13 @@ class GameStream(channel: ActorRef, gameEngineActor: ActorRef) extends Actor {
     scheduler = context.system.scheduler.schedule(
       initialDelay = 0 seconds,
       interval = 30 seconds,
-      receiver = channel,
+      receiver = out,
       message = upickle.default.write(wrapPing(Ping()))
     )
   }
 
   def receive = {
-    case r: ServerToClientWrapper => channel ! upickle.default.write[ServerToClientWrapper](r)
+    case r: ServerToClientWrapper => out ! upickle.default.write[ServerToClientWrapper](r)
     case x => log.error("Invalid message: " + x + " - " + sender())
   }
 

@@ -5,7 +5,7 @@
 @partials.template("") {
 <div class="uk-width-1-10"></div>
 <div class="left uk-width-4-10">
-        @helper.form(action = routes.Application.createGame(), 'class -> "uk-form", 'style -> "margin-top: 30px") {
+        @helper.form(action = routes.HomeController.createGame(), 'class -> "uk-form", 'style -> "margin-top: 30px") {
             <fieldset data-uk-margin>
                 <legend>Start a new game</legend>
                 <input type="text" name="nameX" id="nameX" placeholder="Your name">

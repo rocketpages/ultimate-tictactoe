@@ -2,16 +2,17 @@ package controllers
 
 import actors.game.GameEngineActor
 import actors.player.{GameStream, PlayerActor}
-import akka.actor.Props
-import play.api.Play.current
-import play.api.mvc._
-import play.libs.Akka
+import akka.actor.{ActorSystem, Props}
+import akka.stream.Materializer
+import com.google.inject.Inject
 import model.forms.Forms._
-import play.api.i18n.Messages.Implicits._
+import play.api.mvc._
+import play.api.libs.streams._
+import play.api.i18n.{MessagesApi, I18nSupport}
 
-object Application extends Controller {
+class HomeController @Inject() (val messagesApi: MessagesApi)(implicit system: ActorSystem, materializer: Materializer) extends Controller with I18nSupport {
 
-  val gameEngineActor = Akka.system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
+  val gameEngineActor = system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
 
   /**
    * Renders the UI
@@ -44,16 +45,16 @@ object Application extends Controller {
    * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
    * the actor that Play should create when it receives the WebSocket connection.
    */
-  def websocket = WebSocket.acceptWithActor[String, String] { request => channel =>
-    PlayerActor.props(channel, gameEngineActor)
+  def websocket = WebSocket.accept[String, String] { request =>
+    ActorFlow.actorRef(out => PlayerActor.props(out, gameEngineActor))
   }
 
   /**
     * To handle a WebSocket with an actor, we need to give Play a akka.actor.Props object that describes
     * the actor that Play should create when it receives the WebSocket connection.
     */
-  def gamestream = WebSocket.acceptWithActor[String, String] { request => channel =>
-    GameStream.props(channel, gameEngineActor)
+  def gamestream = WebSocket.accept[String, String] { request =>
+    ActorFlow.actorRef(out => GameStream.props(out, gameEngineActor))
   }
 
 }

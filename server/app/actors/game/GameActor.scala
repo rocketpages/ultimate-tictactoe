@@ -13,8 +13,10 @@ case object ActiveGame extends State
 case object GameOver extends State
 
 sealed trait Data
-final case class OnePlayer(val uuid: String, val x: ActorRef, val xName: String) extends Data
-final case class ActiveGame(val uuid: String, val turnActor: ActorRef, val x: ActorRef, val o: ActorRef, val xName: String, val oName: String) extends Data
+final case class OnePlayer(val uuid: String, val playerX: Player) extends Data
+final case class ActiveGame(val uuid: String, val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player) extends Data
+final case class FinishedGame(val uuid: String, val playerX: Player, val playerO: Player) extends Data
+final case class Player(playerActor: ActorRef, name: String, wins: Int)
 case object Uninitialized extends Data
 
 object GameActor {
@@ -30,30 +32,31 @@ class GameActor extends FSM[State, Data] {
 
   when(WaitingForFirstPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
-      goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, req.player, req.name)
+      goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, Player(req.player, req.name, 0))
     }
   }
 
   when(WaitingForSecondPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
-      goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), req.player, p.x, p.xName, req.name)
+      goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0))
     }
   }
 
   when(ActiveGame) {
     case Event(turn: TurnRequest, game: ActiveGame) => {
       stay using game replying {
-        game.turnActor ! TurnRequest(turn.playerLetter, turn.game, turn.grid, Some(game.x), Some(game.o))
+        game.gameTurnActor ! TurnRequest(turn.playerLetter, turn.game, turn.grid, Some(game.playerX.playerActor), Some(game.playerO.playerActor))
       }
     }
+    // TODO transition from an active game to a finished game
   }
 
   onTransition {
     case WaitingForSecondPlayer -> ActiveGame =>
       nextStateData match {
         case g: ActiveGame => {
-          g.x ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.xName, g.oName)
-          g.o ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.xName, g.oName)
+          g.playerX.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.playerX.name, g.playerO.name)
+          g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }
