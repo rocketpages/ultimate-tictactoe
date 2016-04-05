@@ -16,11 +16,20 @@ object ServerToClientProtocol {
     val gridIdSelector = "cell_" + gameId + gridId
   }
 
-  case class GameOverResponse(tied: Boolean, lastMovePlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+  case class GameWonResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+    val lastGridIdSelector = "cell_" + lastGameId + lastGridId
+  }
+
+  case class GameLostResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+    val lastGridIdSelector = "cell_" + lastGameId + lastGridId
+  }
+
+  case class GameTiedResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
 
   case class GameCreatedEvent(uuid: String, x: String) extends Payload
+
   case class GameStartedEvent(uuid: String, x: String, o: String) extends Payload
 
   type MessageType = String
@@ -32,8 +41,9 @@ object ServerToClientProtocol {
   def wrapHandshakeResponse(m: HandshakeResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_HANDSHAKE), m)
   def wrapPing(m: Ping) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_KEEPALIVE), m)
   def wrapOpponentTurnResponse(m: OpponentTurnResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_OPPONENT_UPDATE), m)
-  def wrapGameOverResponse(m: GameOverResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_OVER), m)
-
+  def wrapGameLostResponse(m: GameLostResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_LOST), m)
+  def wrapGameWonResponse(m: GameWonResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_WON), m)
+  def wrapGameTiedResponse(m: GameTiedResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_TIED), m)
   def wrapGameCreatedEvent(m: GameCreatedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_NEW_GAME_CREATED_EVENT), m)
   def wrapGameStartedEvent(m: GameStartedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STARTED_EVENT), m)
 }

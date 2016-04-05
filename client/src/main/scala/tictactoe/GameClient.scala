@@ -97,31 +97,31 @@ object GameClient extends js.JSApp {
     }
   }
 
-  private def processGameOver(response: GameOverResponse): Unit = {
-    if (response.tied) {
-      jQuery("#status").text(MessageKeyConstants.TIED_STATUS)
+  private def processGameTied(response: GameTiedResponse): Unit = {
+    jQuery("#status").text(MessageKeyConstants.TIED_STATUS)
 
-      // update the board if you didn't make the last move
-      if (response.lastMovePlayer != player) {
-        // add opponents last turn to your board
-        jQuery("#" + response.lastGridId).addClass(opponent)
-        jQuery("#" + response.lastGridId).html(opponent)
-      }
-    } else {
-      if (response.lastMovePlayer == player) {
-        jQuery("[id^=tile_" + response.lastGameId + "]").remove()
-        jQuery("#winner_" + response.lastGameId).html(player)
-        jQuery("#winner_" + response.lastGameId).addClass("color-" + player)
-        jQuery("#winner_" + response.lastGameId).show()
-        jQuery("#status").text(MessageKeyConstants.YOU_WIN_STATUS)
-      } else {
-        jQuery("[id^=tile_" + response.lastGameId + "]").remove()
-        jQuery("#winner_" + response.lastGameId).html(opponent)
-        jQuery("#winner_" + response.lastGameId).addClass("color-" + opponent)
-        jQuery("#winner_" + response.lastGameId).show()
-        jQuery("#status").text(MessageKeyConstants.YOU_LOSE_STATUS)
-      }
+    // update the board if you didn't make the last move
+    if (response.lastPlayer != player) {
+      // add opponents last turn to your board
+      jQuery("#" + response.lastGridId).addClass(opponent)
+      jQuery("#" + response.lastGridId).html(opponent)
     }
+  }
+
+  private def processGameWon(response: GameWonResponse): Unit = {
+    jQuery("[id^=tile_" + response.lastGameId + "]").remove()
+    jQuery("#winner_" + response.lastGameId).html(player)
+    jQuery("#winner_" + response.lastGameId).addClass("color-" + player)
+    jQuery("#winner_" + response.lastGameId).show()
+    jQuery("#status").text(MessageKeyConstants.YOU_WIN_STATUS)
+  }
+
+  private def processGameLost(response: GameLostResponse): Unit = {
+    jQuery("[id^=tile_" + response.lastGameId + "]").remove()
+    jQuery("#winner_" + response.lastGameId).html(opponent)
+    jQuery("#winner_" + response.lastGameId).addClass("color-" + opponent)
+    jQuery("#winner_" + response.lastGameId).show()
+    jQuery("#status").text(MessageKeyConstants.YOU_LOSE_STATUS)
   }
 
   def main(): Unit = {}
@@ -182,7 +182,9 @@ object GameClient extends js.JSApp {
           case MessageKeyConstants.MESSAGE_BOARD_WON => processGameBoardWon(read[BoardWonResponse](payload))
           case MessageKeyConstants.MESSAGE_OPPONENT_UPDATE => processOpponentUpdate(read[OpponentTurnResponse](payload))
           case MessageKeyConstants.MESSAGE_GAME_STARTED => processInitialTurn(read[GameStartResponse](payload))
-          case MessageKeyConstants.MESSAGE_GAME_OVER => processGameOver(read[GameOverResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_LOST => processGameLost(read[GameLostResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_WON => processGameWon(read[GameWonResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_TIED => processGameTied(read[GameTiedResponse](payload))
           case MessageKeyConstants.MESSAGE_KEEPALIVE => {}
           case x => {
             dom.console.log("unknown message type: " + x)

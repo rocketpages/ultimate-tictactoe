@@ -4,20 +4,25 @@ import model.akka.ActorMessageProtocol.StartGameMessage
 import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
 import akka.actor._
-import shared.MessageKeyConstants
+import shared.ServerToClientProtocol.{GameLostResponse, GameTiedResponse, GameWonResponse}
+import shared.{ServerToClientProtocol, MessageKeyConstants}
 
+// game states
 sealed trait State
 case object WaitingForFirstPlayer extends State
 case object WaitingForSecondPlayer extends State
 case object ActiveGame extends State
 case object GameOver extends State
 
+// state transition data
 sealed trait Data
 final case class OnePlayer(val uuid: String, val playerX: Player) extends Data
 final case class ActiveGame(val uuid: String, val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player) extends Data
-final case class FinishedGame(val uuid: String, val playerX: Player, val playerO: Player) extends Data
-final case class Player(playerActor: ActorRef, name: String, wins: Int)
+final case class GameOver(playerX: Player, playerO: Player, rematchPlayerX: Boolean, rematchPlayerO: Boolean) extends Data
 case object Uninitialized extends Data
+
+// inner class
+final case class Player(playerActor: ActorRef, name: String, wins: Int)
 
 object GameActor {
   def props = Props(new GameActor)
@@ -43,12 +48,40 @@ class GameActor extends FSM[State, Data] {
   }
 
   when(ActiveGame) {
-    case Event(turn: TurnRequest, game: ActiveGame) => {
-      stay using game replying {
-        game.gameTurnActor ! TurnRequest(turn.playerLetter, turn.game, turn.grid, Some(game.playerX.playerActor), Some(game.playerO.playerActor))
-      }
+    case Event(turn: TurnMessage, game: ActiveGame) => {
+      game.gameTurnActor ! TurnMessage(turn.playerLetter, turn.game, turn.grid, Some(game.playerX.playerActor), Some(game.playerO.playerActor))
+      stay using game
     }
-    // TODO transition from an active game to a finished game
+    case Event(m: GameWonMessage, game: ActiveGame) => {
+      context.stop(game.gameTurnActor)
+
+      val (winner, loser) = m.lastPlayer match {
+        case "X" => {
+          (game.playerX, game.playerO)
+        }
+        case "O" => {
+          (game.playerO, game.playerX)
+        }
+      }
+
+      winner.playerActor ! ServerToClientProtocol.wrapGameWonResponse(GameWonResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed))
+      loser.playerActor ! ServerToClientProtocol.wrapGameLostResponse(GameLostResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed))
+
+      goto(GameOver) using GameOver(game.playerX, game.playerO, false, false)
+    }
+    case Event(m: GameTiedMessage, game: ActiveGame) => {
+      context.stop(game.gameTurnActor) // kill the game turn actor, that game is done!
+      val response = ServerToClientProtocol.wrapGameTiedResponse(GameTiedResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed))
+      game.playerO.playerActor ! response
+      game.playerX.playerActor ! response
+      goto(GameOver) using GameOver(game.playerX, game.playerO, false, false)
+    }
+  }
+
+  when(GameOver) {
+    case Event(a: Any, state: GameOver) => {
+      stay
+    }
   }
 
   onTransition {

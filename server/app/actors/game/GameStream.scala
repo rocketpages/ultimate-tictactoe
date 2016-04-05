@@ -2,7 +2,7 @@ package actors.player
 
 import akka.actor._
 import akka.event.Logging
-import model.akka.ActorMessageProtocol.RegisterGameStreamSubscriber
+import model.akka.ActorMessageProtocol.RegisterGameStreamSubscriberMessage
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
 import upickle.default._
@@ -18,7 +18,7 @@ class GameStream(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
 
   override def preStart() {
     // register as a subscriber to game updates
-    gameEngineActor ! RegisterGameStreamSubscriber
+    gameEngineActor ! RegisterGameStreamSubscriberMessage
 
     // send handshake response
     self ! wrapHandshakeResponse(HandshakeResponse(status = MessageKeyConstants.MESSAGE_OK))

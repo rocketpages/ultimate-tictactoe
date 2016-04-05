@@ -51,7 +51,7 @@ class GameEngineActor extends Actor {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameCreatedEvent(new GameCreatedEvent(uuid, c.name)))
     }
     // register the sender as a subscriber to game updates
-    case RegisterGameStreamSubscriber => {
+    case RegisterGameStreamSubscriberMessage => {
       subscribers += sender()
 
       // notify subscribers of event

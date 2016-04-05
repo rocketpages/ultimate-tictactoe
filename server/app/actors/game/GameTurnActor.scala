@@ -2,9 +2,9 @@ package actors.game
 
 import actors.{PlayerLetter, GameStatus}
 import actors.GameStatus._
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{Props, Actor}
 import akka.event.Logging
-import model.akka.ActorMessageProtocol.TurnRequest
+import model.akka.ActorMessageProtocol._
 import shared.MessageKeyConstants
 import shared.ServerToClientProtocol._
 
@@ -59,12 +59,11 @@ class GameTurnActor extends Actor {
   var validBoardId: Option[Int] = None
 
   def receive = {
-    case req: TurnRequest => processTurnCommand(req)
+    case req: TurnMessage => processTurnCommand(req)
     case x => log.error("GameTurnActor: Invalid message type: " + x.toString + " / sender: " + sender.toString)
   }
 
-  private def processTurnCommand(req: TurnRequest) {
-    System.out.println(s"processing turn command: ${req}")
+  private def processTurnCommand(req: TurnMessage) {
     // check to make sure the current turn is being played on a valid square
     if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
       val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
@@ -79,7 +78,7 @@ class GameTurnActor extends Actor {
     }
   }
 
-  private def handleNextTurn(req: TurnRequest) {
+  private def handleNextTurn(req: TurnMessage) {
     val (opponent, player) = if (req.playerLetter == PlayerLetter.O)
       (req.playerX.get, req.playerO.get)
     else
@@ -94,19 +93,12 @@ class GameTurnActor extends Actor {
     }
   }
 
-  private def handleGameWon(turnRequestMsg: TurnRequest) {
-    handleGameOutcome(false, turnRequestMsg)
+  private def handleGameWon(m: TurnMessage) {
+    context.parent ! GameWonMessage(m.playerLetter.toString, m.game.toInt, m.grid.toInt)
   }
 
-  private def handleGameTied(turnRequestMsg: TurnRequest) {
-    handleGameOutcome(true, turnRequestMsg)
-  }
-
-  private def handleGameOutcome(tied: Boolean, req: TurnRequest) {
-    val playerLetter = req.playerLetter.toString
-    val gameOverResponse = wrapGameOverResponse(GameOverResponse(tied, playerLetter, req.game.toInt, req.grid.toInt))
-    req.playerX.get ! gameOverResponse
-    req.playerO.get ! gameOverResponse
+  private def handleGameTied(m: TurnMessage) {
+    context.parent ! GameTiedMessage(m.playerLetter.toString, m.game.toInt, m.grid.toInt)
   }
 
   /**

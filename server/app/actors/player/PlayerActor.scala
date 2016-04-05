@@ -1,7 +1,7 @@
 package actors.player
 
 import actors.PlayerLetter.PlayerLetter
-import model.akka.ActorMessageProtocol.{JoinGameMessage, CreateGameMessage, StartGameMessage, TurnRequest}
+import model.akka.ActorMessageProtocol.{JoinGameMessage, CreateGameMessage, StartGameMessage, TurnMessage}
 import model.akka._
 import akka.actor._
 import akka.event.Logging
@@ -79,7 +79,7 @@ class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
   private def handleTurnRequest(c: TurnCommand) {
     maybePlayerLetter match {
       case Some(playerLetter) => maybeGame match {
-          case Some(game) => game ! TurnRequest(playerLetter, c.gameId.toString, c.gridId.toString)
+          case Some(game) => game ! TurnMessage(playerLetter, c.gameId.toString, c.gridId.toString)
           case _ => log.error("player does not belong to a game")
       }
       case _ => log.error("player does not have a letter assigned")
