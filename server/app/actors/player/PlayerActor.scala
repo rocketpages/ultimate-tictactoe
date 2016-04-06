@@ -1,11 +1,11 @@
 package actors.player
 
 import actors.PlayerLetter.PlayerLetter
-import model.akka.ActorMessageProtocol.{JoinGameMessage, CreateGameMessage, StartGameMessage, TurnMessage}
+import model.akka.ActorMessageProtocol._
 import model.akka._
 import akka.actor._
 import akka.event.Logging
-import shared.ClientToServerProtocol.{CreateGameCommand, JoinGameCommand, TurnCommand, ClientToServerWrapper}
+import shared.ClientToServerProtocol._
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
 import upickle.default._
@@ -41,7 +41,7 @@ class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
     case incoming: String => handleIncomingMessage(incoming)
     case tr: StartGameMessage => startGame(tr)
     case r: ServerToClientWrapper => out ! upickle.default.write[ServerToClientWrapper](r)
-    case x => log.error("Invalid message: " + x.getClass + " - " + sender())
+    case _ => log.error("Invalid message")
   }
 
   private def startGame(tr: ActorMessageProtocol.StartGameMessage) {
@@ -72,7 +72,15 @@ class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
         val pl = read[CreateGameCommand](payload)
         gameEngineActor ! CreateGameMessage(self, pl.nameX)
       }
-      case MessageKeyConstants.MESSAGE_TURN_COMMAND => handleTurnRequest(read[TurnCommand](payload))
+      case MessageKeyConstants.MESSAGE_TURN_COMMAND => {
+        handleTurnRequest(read[TurnCommand](payload))
+      }
+      case MessageKeyConstants.MESSAGE_PLAY_AGAIN_COMMAND => {
+        handlePlayAgain(read[PlayAgainCommand](payload))
+      }
+      case _ => {
+        log.error("Invalid payload type")
+      }
     }
   }
 
@@ -83,6 +91,18 @@ class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
           case _ => log.error("player does not belong to a game")
       }
       case _ => log.error("player does not have a letter assigned")
+    }
+  }
+
+  private def handlePlayAgain(c: PlayAgainCommand): Unit = {
+    maybePlayerLetter match {
+      case Some(playerLetter) => maybeGame match {
+        case Some(game) => {
+          game ! PlayAgainMessage(playerLetter.toString, c.playAgain)
+        }
+        case _ => log.error("No game")
+      }
+      case None => log.error("No player letter")
     }
   }
 

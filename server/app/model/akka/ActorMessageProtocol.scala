@@ -14,5 +14,6 @@ object ActorMessageProtocol {
   case class RegisterPlayerWithGameMessage(uuid: String, player: ActorRef, name: String)
   case class GameWonMessage(lastPlayer: String, lastGameBoardPlayed: Int, lastGridPlayed: Int)
   case class GameTiedMessage(lastPlayer: String, lastGameBoardPlayed: Int, lastGridPlayed: Int)
+  case class PlayAgainMessage(player: String, playAgain: Boolean)
 
 }

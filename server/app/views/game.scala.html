@@ -2,24 +2,23 @@
 
 @partials.template("") {
 
-
-    <div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
-    <div class="uk-width-medium-3-10" style="margin-top: 10px;">
-        <div class="uk-panel-box">
-            <span id="nameX">@nameX</span>
-        </div>
+<div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
+<div class="uk-width-medium-3-10" style="margin-top: 10px;">
+    <div class="uk-panel-box">
+        <span id="nameX">@nameX</span> <div id="winsX" class="uk-badge">0 wins</div>
     </div>
-    <div class="uk-width-medium-2-10 uk-height-1-1" style="margin-top: 10px;">
-        <div class="uk-panel">
-            <p class="uk-vertical-align-middle uk-align-center">Vs</p>
-        </div>
+</div>
+<div class="uk-width-medium-2-10 uk-height-1-1" style="margin-top: 10px;">
+    <div class="uk-panel">
+        <p class="uk-vertical-align-middle uk-align-center">Vs</p>
     </div>
-    <div class="uk-width-medium-3-10" style="margin-top: 10px;">
-        <div class="uk-panel-box">
-            <span id="nameO">@nameO.getOrElse("waiting...")</span>
-        </div>
+</div>
+<div class="uk-width-medium-3-10" style="margin-top: 10px;">
+    <div class="uk-panel-box">
+        <span id="nameO">@nameO.getOrElse("waiting...")</span> <div id="winsO" class="uk-badge" style="display:none;">0 wins</div>
     </div>
-    <div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
+</div>
+<div class="uk-width-medium-1-10" style="margin-top: 10px;">&nbsp;</div>
 
 <div class="uk-width-10-10">
     <div class="game">
@@ -299,7 +298,8 @@
 <div class="uk-width-10-10" style="margin-top:1em;">
 
     <div class="uk-width-1-2 uk-container-center">
-        <div class="uk-panel uk-panel-box">
+        <div class="uk-panel uk-text-center">
+            <div id="play_again" style="display:none;">Play again? <a id="play_again_yes" class="uk-button uk-button-success" type="button">Yes</a> <a id="play_again_no" class="uk-button uk-button-danger" type="button">No</a></div>
             <p id="status" style="text-align:center">&nbsp;</p>
         </div>
     </div>

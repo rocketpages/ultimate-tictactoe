@@ -39,7 +39,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processGameBoardWon(response: BoardWonResponse): Unit = {
-    jQuery("[id^=tile_" + response.gameId + "]").remove()
+    jQuery("[id^=tile_" + response.gameId + "]").hide()
     jQuery("#winner_" + response.gameId).html(player)
     jQuery("#winner_" + response.gameId).addClass("color-" + player)
     jQuery("#winner_" + response.gameId).show()
@@ -63,7 +63,7 @@ object GameClient extends js.JSApp {
       case _ => {
         yourTurn = true
         if (response.lastBoardWon == true) {
-          jQuery("[id^=tile_" + response.gameId + "]").remove()
+          jQuery("[id^=tile_" + response.gameId + "]").hide()
           jQuery("#winner_" + response.gameId).html(opponent)
           jQuery("#winner_" + response.gameId).addClass("color-" + opponent)
           jQuery("#winner_" + response.gameId).show()
@@ -86,13 +86,16 @@ object GameClient extends js.JSApp {
   }
 
   private def processInitialTurn(response: GameStartResponse): Unit = {
+    clearGameBoard()
+    jQuery("#play_again").hide()
+    jQuery("#winsO").show()
     setPlayerLetter(response.playerLetter)
     jQuery("#nameO").text(response.nameO)
     if (response.turnIndicator == MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN) {
       yourTurn = true
+      jQuery("[id^=cell_]").prop("disabled", false)
       jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
     } else if (response.turnIndicator == MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING) {
-      jQuery("[id^=cell_]").prop("disabled", true)
       jQuery("#status").text(MessageKeyConstants.STRATEGIZING_STATUS)
     }
   }
@@ -106,22 +109,39 @@ object GameClient extends js.JSApp {
       jQuery("#" + response.lastGridId).addClass(opponent)
       jQuery("#" + response.lastGridId).html(opponent)
     }
+
+    jQuery("#play_again").show()
   }
 
   private def processGameWon(response: GameWonResponse): Unit = {
-    jQuery("[id^=tile_" + response.lastGameId + "]").remove()
+    jQuery("[id^=tile_" + response.lastGameId + "]").hide()
     jQuery("#winner_" + response.lastGameId).html(player)
     jQuery("#winner_" + response.lastGameId).addClass("color-" + player)
     jQuery("#winner_" + response.lastGameId).show()
+    jQuery("#winsX").html(response.winsX + " wins")
+    jQuery("#winsO").html(response.winsO + " wins")
     jQuery("#status").text(MessageKeyConstants.YOU_WIN_STATUS)
+    jQuery("#play_again").show()
   }
 
   private def processGameLost(response: GameLostResponse): Unit = {
-    jQuery("[id^=tile_" + response.lastGameId + "]").remove()
+    jQuery("[id^=tile_" + response.lastGameId + "]").hide()
     jQuery("#winner_" + response.lastGameId).html(opponent)
     jQuery("#winner_" + response.lastGameId).addClass("color-" + opponent)
     jQuery("#winner_" + response.lastGameId).show()
+    jQuery("#winsX").html(response.winsX + " wins")
+    jQuery("#winsO").html(response.winsO + " wins")
     jQuery("#status").text(MessageKeyConstants.YOU_LOSE_STATUS)
+    jQuery("#play_again").show()
+  }
+
+  private def clearGameBoard(): Unit = {
+    jQuery("[id^=cell_]").prop("disabled", true)
+    jQuery("[id^=cell_]").html("")
+    jQuery("[id^=cell_]").removeClass(player)
+    jQuery("[id^=cell_]").removeClass(opponent)
+    jQuery("[id^=tile_]").show()
+    jQuery("[id^=winner_]").hide()
   }
 
   def main(): Unit = {}
@@ -132,6 +152,8 @@ object GameClient extends js.JSApp {
   def start(nameX: String, nameO: String, gameId: String): Unit = {
     jQuery(dom.document).ready { () =>
 
+      clearGameBoard()
+
       dom.console.log("i am alive!")
 
       if (gameId != "") uuid = Some(gameId)
@@ -140,6 +162,20 @@ object GameClient extends js.JSApp {
       ws = Some(new WebSocket(WEBSOCKET_URL))
 
       jQuery("[id^=winner_]").hide()
+
+      jQuery("#play_again_yes").click({
+        (thiz: HTMLElement) => {
+          jQuery("#play_again").hide()
+          ws.get.send(write[ClientToServerWrapper](wrapPlayAgainCommand(PlayAgainCommand(player, true))))
+        }
+      }: js.ThisFunction)
+
+      jQuery("#play_again_no").click({
+        (thiz: HTMLElement) => {
+          jQuery("#play_again").hide()
+          ws.get.send(write[ClientToServerWrapper](wrapPlayAgainCommand(PlayAgainCommand(player, false))))
+        }
+      }: js.ThisFunction)
 
       jQuery("button").click({
         (thiz: HTMLElement) => {

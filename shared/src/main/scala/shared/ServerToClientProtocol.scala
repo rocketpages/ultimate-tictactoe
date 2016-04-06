@@ -16,15 +16,15 @@ object ServerToClientProtocol {
     val gridIdSelector = "cell_" + gameId + gridId
   }
 
-  case class GameWonResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+  case class GameWonResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int, winsX: Int, winsO: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
 
-  case class GameLostResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+  case class GameLostResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int, winsX: Int, winsO: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
 
-  case class GameTiedResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int) extends Payload {
+  case class GameTiedResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
 
