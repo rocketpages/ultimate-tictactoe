@@ -2,7 +2,8 @@ package actors.player
 
 import akka.actor._
 import akka.event.Logging
-import model.akka.ActorMessageProtocol.RegisterGameStreamSubscriberMessage
+import model.akka.ActorMessageProtocol.{JoinGameMessage, RegisterGameStreamSubscriberMessage}
+import shared.ClientToServerProtocol.{JoinGameCommand, ClientToServerWrapper}
 import shared.ServerToClientProtocol._
 import shared.MessageKeyConstants
 import upickle.default._

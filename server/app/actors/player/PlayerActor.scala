@@ -37,9 +37,22 @@ class PlayerActor(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
     )
   }
 
+  override def postStop() = {
+    maybeGame match {
+      case Some(game) => {
+        game ! GameTerminatedMessage(maybePlayerLetter.get.toString)
+      }
+      case None => {
+        log.error("player actor killed but no game assigned")
+      }
+    }
+  }
+
   def receive = {
     case incoming: String => handleIncomingMessage(incoming)
     case tr: StartGameMessage => startGame(tr)
+    case g: GameCreatedMessage => setGameState(Some(g.gameActor), Some(g.playerLetter))
+    case go: GameOverMessage => out ! upickle.default.write[ServerToClientWrapper](wrapGameOverEvent(GameOverEvent(go.uuid, go.fromPlayer)))
     case r: ServerToClientWrapper => out ! upickle.default.write[ServerToClientWrapper](r)
     case _ => log.error("Invalid message")
   }

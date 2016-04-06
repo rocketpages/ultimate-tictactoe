@@ -1,6 +1,7 @@
 package model.akka
 
 import actors.PlayerLetter._
+import actors.game.GameActor
 import akka.actor.ActorRef
 
 object ActorMessageProtocol {
@@ -15,5 +16,8 @@ object ActorMessageProtocol {
   case class GameWonMessage(lastPlayer: String, lastGameBoardPlayed: Int, lastGridPlayed: Int)
   case class GameTiedMessage(lastPlayer: String, lastGameBoardPlayed: Int, lastGridPlayed: Int)
   case class PlayAgainMessage(player: String, playAgain: Boolean)
+  case class GameOverMessage(uuid: String, fromPlayer: String)
+  case class GameTerminatedMessage(terminatedByPlayer: String)
+  case class GameCreatedMessage(gameActor: ActorRef, playerLetter: PlayerLetter)
 
 }

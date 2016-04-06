@@ -9,43 +9,59 @@ import shared.{ServerToClientProtocol, MessageKeyConstants}
 
 // game states
 sealed trait State
+
 case object WaitingForFirstPlayer extends State
+
 case object WaitingForSecondPlayer extends State
+
 case object ActiveGame extends State
+
 case object AwaitRematch extends State
-case object GameOver extends State
 
 // state transition data
 sealed trait Data
-final case class OnePlayer(val uuid: String, val playerX: Player) extends Data
-final case class ActiveGame(val uuid: String, val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
-final case class AwaitRematch(uuid: String, playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
-final case class GameOver(winsPlayerX: Int, winsPlayerO: Int, totalGamesPlayed: Int) extends Data
+
+final case class OnePlayer(val playerX: Player) extends Data
+
+final case class ActiveGame(val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
+
+final case class AwaitRematch(playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
+
 case object Uninitialized extends Data
 
 // inner class
 final case class Player(playerActor: ActorRef, name: String, wins: Int)
 
 object GameActor {
-  def props = Props(new GameActor)
+  def props(gameEngineActor: ActorRef, uuid: String) = Props(new GameActor(gameEngineActor, uuid))
 }
 
 /**
- * Model the game engine as a finite state machine
- */
-class GameActor extends FSM[State, Data] {
+  * Model the game engine as a finite state machine
+  */
+class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   startWith(WaitingForFirstPlayer, Uninitialized)
 
   when(WaitingForFirstPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
-      goto(WaitingForSecondPlayer) using OnePlayer(req.uuid, Player(req.player, req.name, 0))
+      goto(WaitingForSecondPlayer) using OnePlayer(Player(req.player, req.name, 0))
+    }
+    case Event(m: GameTerminatedMessage, p: OnePlayer) => {
+      gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
+      p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      stop
     }
   }
 
   when(WaitingForSecondPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
-      goto(ActiveGame) using ActiveGame(req.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0), 0)
+      goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0), 0)
+    }
+    case Event(m: GameTerminatedMessage, p: OnePlayer) => {
+      gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
+      p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      stop
     }
   }
 
@@ -60,8 +76,8 @@ class GameActor extends FSM[State, Data] {
 
       val (x, o) = {
         m.lastPlayer match {
-          case "X" => (game.playerX.copy(wins = game.playerX.wins+1), game.playerO)
-          case "O" => (game.playerX, game.playerO.copy(wins = game.playerO.wins+1))
+          case "X" => (game.playerX.copy(wins = game.playerX.wins + 1), game.playerO)
+          case "O" => (game.playerX, game.playerO.copy(wins = game.playerO.wins + 1))
         }
       }
 
@@ -70,7 +86,7 @@ class GameActor extends FSM[State, Data] {
       x.playerActor ! ServerToClientProtocol.wrapGameWonResponse(GameWonResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
       o.playerActor ! ServerToClientProtocol.wrapGameLostResponse(GameLostResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
 
-      goto(AwaitRematch) using AwaitRematch(game.uuid, x, o, None, None, totalGames)
+      goto(AwaitRematch) using AwaitRematch(x, o, None, None, totalGames)
     }
     // PlayerActor sends this
     case Event(m: GameTiedMessage, game: ActiveGame) => {
@@ -83,63 +99,71 @@ class GameActor extends FSM[State, Data] {
       game.playerO.playerActor ! response
       game.playerX.playerActor ! response
 
-      goto(AwaitRematch) using AwaitRematch(game.uuid, game.playerX, game.playerO, None, None, totalGames)
+      goto(AwaitRematch) using AwaitRematch(game.playerX, game.playerO, None, None, totalGames)
+    }
+    case Event(m: GameTerminatedMessage, game: ActiveGame) => {
+      gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
+      game.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      game.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      stop
     }
   }
 
   when(AwaitRematch) {
     case Event(m: PlayAgainMessage, state: AwaitRematch) => {
-
-      System.out.println("received play again from " + m.player)
-
-      val (playAgainX, playAgainO) = m.player match {
-        case "X" => {
-          val x = Some(m.playAgain)
-          val o = state.rematchPlayerO
-          (x, o)
-        }
-        case "O" => {
-          val o = Some(m.playAgain)
-          val x = state.rematchPlayerX
-          (x, o)
-        }
-      }
-
-      playAgainX match {
-        case Some(rematchO) => playAgainO match {
-          case Some(rematchX) => {
-            // both player x and player o have responded to the rematch request
-            if (rematchX && rematchO) {
-              System.out.println("both x and o have requested a rematch!")
-              goto(ActiveGame) using ActiveGame(state.uuid, context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), state.playerX, state.playerO, state.totalGames)
-            }
-            else {
-              System.out.println("one or both of x or o has request not to play!")
-              goto(GameOver) using GameOver(state.playerX.wins, state.playerO.wins, state.totalGames)
-            }
+      if (m.playAgain == false) {
+        gameEngine ! GameOverMessage(uuid, m.player)
+        state.playerX.playerActor ! GameOverMessage(uuid, m.player)
+        state.playerO.playerActor ! GameOverMessage(uuid, m.player)
+        stop
+      } else {
+        val (playAgainX, playAgainO) = m.player match {
+          case "X" => {
+            val x = Some(m.playAgain)
+            val o = state.rematchPlayerO
+            (x, o)
           }
-          case _ => {
-            System.out.println("still waiting for x to send their answer")
-            stay using AwaitRematch(state.uuid, state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
+          case "O" => {
+            val o = Some(m.playAgain)
+            val x = state.rematchPlayerX
+            (x, o)
           }
         }
-        case _ => {
-          System.out.println("still waiting for o to send their answer")
-          stay using AwaitRematch(state.uuid, state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
+
+        playAgainX match {
+          case Some(rematchO) => playAgainO match {
+            case Some(rematchX) => {
+              // both player x and player o have responded to the rematch request
+              if (rematchX && rematchO) {
+                goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), state.playerX, state.playerO, state.totalGames)
+              } else {
+                log.error("Game ended in an invalid state")
+                stop
+              }
+            }
+            case _ => stay using AwaitRematch(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
+          }
+          case _ => stay using AwaitRematch(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
         }
       }
-
     }
-  }
-
-  when(GameOver) {
-    case Event(m: Any, state: Any) => {
-      log.error("fuck!")
-      stay
+    case Event(m: GameTerminatedMessage, game: ActiveGame) => {
+      gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
+      game.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      game.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      stop
     }
   }
 
   onTransition {
+    case WaitingForFirstPlayer -> WaitingForSecondPlayer => {
+      nextStateData match {
+        case p: OnePlayer => {
+          p.playerX.playerActor ! GameCreatedMessage(self, PlayerLetter.X)
+        }
+        case _ => log.error(s"invalid state match for WaitingForFirstPlayer, stateData ${stateData}")
+      }
+    }
     case WaitingForSecondPlayer -> ActiveGame =>
       nextStateData match {
         case g: ActiveGame => {
@@ -160,8 +184,8 @@ class GameActor extends FSM[State, Data] {
   }
 
   whenUnhandled {
-    case Event(msg, _) => {
-      log.error("Received unknown event: " + msg)
+    case _ => {
+      log.error("invalid message received")
       stay
     }
   }

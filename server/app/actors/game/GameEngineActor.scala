@@ -4,7 +4,7 @@ import akka.event.Logging
 import model.akka.ActorMessageProtocol._
 import akka.actor._
 import shared.ServerToClientProtocol
-import shared.ServerToClientProtocol.{GameStartedEvent, GameCreatedEvent}
+import shared.ServerToClientProtocol._
 import scala.collection.mutable.ListBuffer
 
 object GameEngineActor {
@@ -37,9 +37,7 @@ class GameEngineActor extends Actor {
     case c: CreateGameMessage => {
       // create the game
       val uuid = java.util.UUID.randomUUID.toString
-      val newGame = {
-        context.actorOf(Props[GameActor], name = "gameActor" + uuid)
-      }
+      val newGame = context.actorOf(GameActor.props(self, uuid), name = "gameActor" + uuid)
 
       // add game to the game engine
       games += (uuid -> GameRecord(uuid, newGame, Some(c.name), None))
@@ -54,11 +52,30 @@ class GameEngineActor extends Actor {
     case RegisterGameStreamSubscriberMessage => {
       subscribers += sender()
 
-      // notify subscribers of event
-      games.values.foreach(g => {
-        sender() ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse("")))
-      })
+      val openGamesRecord = games.foldLeft(Array[OpenGameRecord]())(filterOpenGames)
+      val closedGamesRecord = games.foldLeft(Array[ClosedGameRecord]())(filterClosedGames)
+
+      sender() ! ServerToClientProtocol.wrapGameRegistryEvent(GameRegistryEvent(openGamesRecord, closedGamesRecord))
+    }
+    // notify all the game stream subscribers
+    case m: GameOverMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameOverEvent(GameOverEvent(m.uuid, m.fromPlayer)))
+      games.remove(m.uuid)
     }
     case x => log.error("Invalid type in receive - ", x)
+  }
+
+  private def filterOpenGames(array: Array[OpenGameRecord], game: (String, GameRecord)): Array[OpenGameRecord] = {
+    game._2.oName match {
+      case None => array :+ OpenGameRecord(game._2.uuid, game._2.xName.get)
+      case _ => array
+    }
+  }
+
+  private def filterClosedGames(array: Array[ClosedGameRecord], game: (String, GameRecord)): Array[ClosedGameRecord] = {
+    game._2.oName match {
+      case None => array
+      case _ => array :+ ClosedGameRecord(game._2.uuid, game._2.xName.get, game._2.oName.get)
+    }
   }
 }

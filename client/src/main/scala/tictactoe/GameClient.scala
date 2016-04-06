@@ -221,6 +221,7 @@ object GameClient extends js.JSApp {
           case MessageKeyConstants.MESSAGE_GAME_LOST => processGameLost(read[GameLostResponse](payload))
           case MessageKeyConstants.MESSAGE_GAME_WON => processGameWon(read[GameWonResponse](payload))
           case MessageKeyConstants.MESSAGE_GAME_TIED => processGameTied(read[GameTiedResponse](payload))
+          case MessageKeyConstants.MESSAGE_GAME_OVER => processGameOver(read[GameOverEvent](payload))
           case MessageKeyConstants.MESSAGE_KEEPALIVE => {}
           case x => {
             dom.console.log("unknown message type: " + x)
@@ -228,5 +229,14 @@ object GameClient extends js.JSApp {
         }
       }
     }
+  }
+
+  private def processGameOver(payload: GameOverEvent): Unit = {
+    jQuery("[id^=cell_]").prop("disabled", true)
+    jQuery("#play_again").hide()
+    if (payload.fromPlayer == player)
+      jQuery("#status").text("You ended the game! GAME OVER!")
+    else
+      jQuery("#status").text("Your opponent left the game! GAME OVER!")
   }
 }

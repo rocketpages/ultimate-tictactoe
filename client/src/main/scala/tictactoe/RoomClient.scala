@@ -3,7 +3,7 @@ package tictactoe
 import org.scalajs.dom
 import org.scalajs.dom.raw.{MessageEvent, WebSocket}
 import shared.MessageKeyConstants
-import shared.ServerToClientProtocol.{Payload, GameStartedEvent, GameCreatedEvent, ServerToClientWrapper}
+import shared.ServerToClientProtocol._
 import upickle.default._
 
 import scala.scalajs.js
@@ -37,6 +37,10 @@ object RoomClient extends js.JSApp {
         case MessageKeyConstants.MESSAGE_HANDSHAKE => {}
         case MessageKeyConstants.MESSAGE_NEW_GAME_CREATED_EVENT => handleGameCreated(payload)
         case MessageKeyConstants.MESSAGE_GAME_STARTED_EVENT => handleGameStarted(payload)
+        case MessageKeyConstants.MESSAGE_GAME_OVER => handleGameOver(payload)
+        case MessageKeyConstants.MESSAGE_GAME_REGISTRY_EVENT => handleGameRegistry(payload)
+        case "ping" => dom.console.info("pong")
+        case _ => dom.console.error("unmatched message from the server", wrapper.t)
       }
     }
   }
@@ -48,20 +52,7 @@ object RoomClient extends js.JSApp {
     jQuery("#gameList").show()
     jQuery("#gameListHeader").show()
 
-    val elem =
-    tr(id:="game-" + pl.uuid,
-      td(p(xName)),
-      td(raw("<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
-        "<fieldset data-uk-margin>" +
-        "<input type=\"text\" name=\"nameO\" id=\"nameO\" placeholder=\"Your name\">" +
-        "<input type=\"hidden\" name=\"nameX\" value=\"" + xName + "\">" +
-        "<input type=\"hidden\" name=\"uuid\" value=\"" + pl.uuid + "\">" +
-        "<button class=\"uk-button\">Join game!</button>" +
-        "</fieldset>" +
-        "</form>")
-      )
-    ).render
-
+    val elem = openGameRow(pl.uuid, xName)
     jQuery("#gameList").append(elem)
   }
 
@@ -81,6 +72,53 @@ object RoomClient extends js.JSApp {
 
     jQuery("#game-" + pl.uuid).remove()
     jQuery("#gameList").append(elem)
+  }
+
+  private def handleGameOver(payload: String): Unit = {
+    val pl = read[GameOverEvent](payload)
+    jQuery("#game-" + pl.uuid).remove()
+  }
+
+  private def handleGameRegistry(payload: String): Unit = {
+    val pl = read[GameRegistryEvent](payload)
+
+    pl.openGames.foreach(g => {
+      val elem = openGameRow(g.uuid, g.x)
+      jQuery("#gameList").append(elem)
+    })
+
+    pl.closedGames.foreach(g => {
+      val elem = closedGameRow(g.uuid, g.x, g.o)
+      jQuery("#gameList").append(elem)
+    })
+
+    if (pl.openGames.length > 0 || pl.closedGames.length > 0) {
+      jQuery("#gameList").show()
+      jQuery("#gameListHeader").show()
+    }
+  }
+
+  private def openGameRow(uuid: String, xName: String) = {
+    tr(id:="game-" + uuid,
+      td(p(xName)),
+      td(raw("<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
+        "<fieldset data-uk-margin>" +
+        "<input type=\"text\" name=\"nameO\" id=\"nameO\" placeholder=\"Your name\">" +
+        "<input type=\"hidden\" name=\"nameX\" value=\"" + xName + "\">" +
+        "<input type=\"hidden\" name=\"uuid\" value=\"" + uuid + "\">" +
+        "<button class=\"uk-button\">Join game!</button>" +
+        "</fieldset>" +
+        "</form>")
+      )
+    ).render
+  }
+
+  private def closedGameRow(uuid: String, xName: String, oName: String) = {
+    tr(id:="game-" + uuid,
+      td(p(xName)),
+      td(p(oName)
+      )
+    ).render
   }
 
 }
