@@ -3,35 +3,43 @@
 @(gameForm: Form[GameData])(implicit messages: Messages)
 
 @partials.template("") {
-<div class="uk-width-1-10"></div>
-<div class="left uk-width-4-10">
-        @helper.form(action = routes.HomeController.createGame(), 'class -> "uk-form", 'style -> "margin-top: 30px") {
-            <fieldset data-uk-margin>
-                <legend>Start a new game</legend>
-                <input type="text" name="nameX" id="nameX" placeholder="Your name">
-                <button class="uk-button">Go!</button>
-            </fieldset>
-        }
+<div class="uk-grid uk-margin-large-top">
+    <div class="uk-width-1-10"></div>
+    <div class="left uk-width-3-10">
+        <div class="uk-panel uk-panel-box">
+            @helper.form(action = routes.HomeController.createGame(), 'class -> "uk-form") {
+                <fieldset data-uk-margin>
+                    <legend>Start a new game</legend>
+                    <input type="text" name="nameX" id="nameX" placeholder="Your name">
+                    <button class="uk-button">Go!</button>
+                </fieldset>
+            }
+        </div>
+    </div>
+
+    <div class="right uk-width-5-10">
+        <div class="uk-panel uk-panel-box uk-panel-box-primary">
+            <form class="uk-form">
+                <fieldset data-uk-margin>
+                    <legend>Join an existing game</legend>
+                </fieldset>
+            </form>
+            <table class="uk-table">
+                <caption>There are <span id="open_games">0</span> open games.</caption>
+                <thead id="gameListHeader" style="display:none;">
+                    <tr>
+                        <th>X</th>
+                        <th>O</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="gameList" style="display:none;"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="uk-width-1-10"></div>
 </div>
-<div class="right uk-width-4-10">
-    <form class="uk-form" style="margin-top:30px;">
-        <fieldset data-uk-margin>
-            <legend>Join an existing game</legend>
-        </fieldset>
-    </form>
-    <table class="uk-table">
-        <caption>There are <span id="open_games">2</span> open games.</caption>
-        <thead>
-            <tr>
-                <th>X</th>
-                <th>O</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="gameList"></tbody>
-    </table>
-</div></div>
-<div class="uk-width-1-10"></div>
 
 <script type="text/javascript">
   tictactoe.RoomClient().start();
