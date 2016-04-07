@@ -68,22 +68,34 @@ object RoomClient extends js.JSApp {
   private def handleGameOver(payload: String): Unit = {
     val pl = read[GameOverEvent](payload)
     jQuery("#game-" + pl.uuid).remove()
+
+    val gamesInProgress = jQuery("[id^=game-").length
+
+    if (gamesInProgress == 0) {
+      jQuery("#gameList").hide()
+      jQuery("#gameListHeader").hide()
+    }
   }
 
   private def handleGameRegistry(payload: String): Unit = {
     val pl = read[GameRegistryEvent](payload)
     pl.openGames.foreach(g => jQuery("#gameList").append(openGameRow(g.uuid, g.x)))
     pl.closedGames.foreach(g => jQuery("#gameList").append(closedGameRow(g.uuid, g.x, g.o)))
+
     if (pl.openGames.length > 0 || pl.closedGames.length > 0) {
       jQuery("#gameList").show()
       jQuery("#gameListHeader").show()
+    } else if (pl.openGames.length == 0 && pl.closedGames.length == 0) {
+      jQuery("#gameList").hide()
+      jQuery("#gameListHeader").hide()
     }
   }
 
   private def openGameRow(uuid: String, xName: String) = {
     tr(id:="game-" + uuid,
-      td(p(xName)),
-      td(`colspan`:="4", raw("<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", xName)),
+      td(`colspan`:="4", `class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", raw(
+        "<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
         "<fieldset data-uk-margin>" +
         "<input type=\"text\" name=\"nameO\" id=\"nameO\" placeholder=\"Your name\">" +
         "<input type=\"hidden\" name=\"nameX\" value=\"" + xName + "\">" +
@@ -91,17 +103,17 @@ object RoomClient extends js.JSApp {
         "<button class=\"uk-button\">Join game</button>" +
         "</fieldset>" +
         "</form>")
-      )
+      ))
     ).render
   }
 
   private def closedGameRow(uuid: String, xName: String, oName: String) = {
     tr(id:="game-" + uuid,
-      td(raw(s"<div>${xName} <span>${0} wins</span></div>")),
-      td(raw(s"<div>${oName} <span>${0} wins</span></div>")),
-      td(div("0")),
-      td(div("76")),
-      td(div("12:03"))
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(`class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${0} wins")))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(`class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${0} wins")))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0"))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("76"))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("12:03")))
     ).render
   }
 
