@@ -42,8 +42,6 @@ object ServerToClientProtocol {
 
   case class ServerToClientWrapper(t: MessageType, p: Payload)
 
-
-
   def wrapBoardWonResponse(m: BoardWonResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_BOARD_WON), m)
   def wrapGameStartResponse(m: GameStartResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STARTED), m)
   def wrapHandshakeResponse(m: HandshakeResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_HANDSHAKE), m)
