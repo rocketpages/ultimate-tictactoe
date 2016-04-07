@@ -41,6 +41,7 @@ object GameClient extends js.JSApp {
   private def processGameBoardWon(response: BoardWonResponse): Unit = {
     jQuery("[id^=tile_" + response.gameId + "]").hide()
     jQuery("#winner_" + response.gameId).html(player)
+    jQuery("#winner_" + response.gameId).removeClass("color-" + opponent)
     jQuery("#winner_" + response.gameId).addClass("color-" + player)
     jQuery("#winner_" + response.gameId).show()
   }

@@ -180,7 +180,6 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }
-    case ActiveGame -> AwaitRematch => log.debug("transition from ActiveGame to AwaitRematch!")
     case AwaitRematch -> ActiveGame =>
       nextStateData match {
         case g: ActiveGame => {

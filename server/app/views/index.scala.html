@@ -3,45 +3,54 @@
 @(gameForm: Form[GameData])(implicit messages: Messages)
 
 @partials.template("") {
-<div class="uk-grid uk-margin-large-top">
-    <div class="uk-width-1-10"></div>
-    <div class="left uk-width-3-10">
-        <div class="uk-panel uk-panel-box">
+
+<div class="uk-grid uk-margin-top">
+
+    <div class="uk-width-large-1-4 uk-width-medium-1-5 uk-width-small-1-10">&nbsp;</div>
+    <div class="uk-width-large-2-4 uk-width-medium-3-5 uk-width-small-8-10">
+        <div class="uk-panel uk-panel-box uk-panel-box-primary uk-text-center">
             @helper.form(action = routes.HomeController.createGame(), 'class -> "uk-form") {
-                <fieldset data-uk-margin>
-                    <legend>Start a new game</legend>
-                    <input type="text" name="nameX" id="nameX" placeholder="Your name">
-                    <button class="uk-button">Go!</button>
-                </fieldset>
+            <fieldset data-uk-margin>
+                <legend>Start a new game</legend>
+                <input type="text" name="nameX" id="nameX" placeholder="Your name">
+                <button class="uk-button">Go!</button>
+            </fieldset>
             }
         </div>
     </div>
+    <div class="uk-width-large-1-4 uk-width-medium-1-5 uk-width-small-1-10">&nbsp;</div>
 
-    <div class="right uk-width-5-10">
-        <div class="uk-panel uk-panel-box uk-panel-box-primary">
-            <form class="uk-form">
-                <fieldset data-uk-margin>
-                    <legend>Join an existing game</legend>
-                </fieldset>
-            </form>
-            <table class="uk-table">
-                <caption>There are <span id="open_games">0</span> open games.</caption>
-                <thead id="gameListHeader" style="display:none;">
+</div>
+
+<div class="uk-grid uk-margin-large-top">
+    <div class="uk-width-large-1-5 uk-width-medium-1-10 uk-hidden-small">&nbsp;</div>
+    <div class="uk-width-large-3-5 uk-width-medium-8-10 uk-width-small-1-1">
+        <h2>Existing games</h2>
+        <div class="uk-panel">
+            <table class="uk-table uk-table-striped">
+                <thead id="gameListHeader" style="display:none">
                     <tr>
                         <th>X</th>
                         <th>O</th>
-                        <th></th>
+                        <th>Games Finished</th>
+                        <th>Total Moves</th>
+                        <th>Elapsed Time</th>
                     </tr>
                 </thead>
-                <tbody id="gameList" style="display:none;"></tbody>
+                <tbody id="gameList" style="display:none"></tbody>
             </table>
         </div>
     </div>
-
-    <div class="uk-width-1-10"></div>
+    <div class="uk-width-large-1-5 uk-width-medium-1-10 uk-hidden-small">&nbsp;</div>
 </div>
 
 <script type="text/javascript">
   tictactoe.RoomClient().start();
 </script>
+
+<style>
+    td {
+        height:30px;
+    }
+</style>
 }

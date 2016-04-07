@@ -29,10 +29,7 @@ class GameEngineActor extends Actor {
       // update the game engine record with the new player
       games.update(c.uuid, GameRecord(c.uuid, g.game, g.xName, Some(c.name)))
 
-      // notify subscribers of event
-      games.values.foreach(g => {
-        subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse(""))))
-      })
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse(""))))
     }
     case c: CreateGameMessage => {
       // create the game
