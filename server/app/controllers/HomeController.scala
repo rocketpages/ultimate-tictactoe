@@ -56,5 +56,5 @@ class HomeController @Inject() (val messagesApi: MessagesApi)(implicit system: A
   def gamestream = WebSocket.accept[String, String] { request =>
     ActorFlow.actorRef(out => GameStream.props(out, gameEngineActor))
   }
- 
+
 }

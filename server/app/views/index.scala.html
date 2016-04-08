@@ -4,6 +4,20 @@
 
 @partials.template("") {
 
+<nav class="uk-navbar uk-navbar-attached">
+
+    <ul class="uk-navbar-nav">
+        <a href="/" class="uk-navbar-brand">Ultimate Tic-Tac-Toe</a>
+        <li>
+            <a href="/rules" class="uk-navbar-nav-subtitle">
+                What is this?
+                <div>Learn the rules</div>
+            </a>
+        </li>
+    </ul>
+
+</nav>
+
 <div class="uk-grid uk-margin-large-top">
 
     <div class="uk-width-large-1-4 uk-width-medium-1-5 uk-width-small-1-10">&nbsp;</div>
@@ -11,7 +25,7 @@
         <div class="uk-panel uk-panel-box uk-panel-box-primary uk-text-center">
             @helper.form(action = routes.HomeController.createGame(), 'class -> "uk-form") {
             <fieldset data-uk-margin>
-                <input type="text" name="nameX" id="nameX" placeholder="Your name">
+                <input type="text" name="nameX" id="nameX" placeholder="Your name" autocomplete="off">
                 <button class="uk-button uk-button-primary">Create New Game</button>
             </fieldset>
             }

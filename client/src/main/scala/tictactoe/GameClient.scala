@@ -59,8 +59,14 @@ object GameClient extends js.JSApp {
 
     // Switch to your turn.
     response.status match {
-      case MessageKeyConstants.MESSAGE_GAME_OVER_YOU_WIN => jQuery("#status").text(opponent + " is the winner!")
-      case MessageKeyConstants.MESSAGE_GAME_OVER_TIED => jQuery("#status").text(MessageKeyConstants.TIED_STATUS)
+      case MessageKeyConstants.MESSAGE_GAME_OVER_YOU_WIN => {
+        jQuery("[id^=status-").hide()
+        jQuery("#status-you-win").show()
+      }
+      case MessageKeyConstants.MESSAGE_GAME_OVER_TIED => {
+        jQuery("[id^=status-").hide()
+        jQuery("#status-tie-game").show()
+      }
       case _ => {
         yourTurn = true
         if (response.lastBoardWon == true) {
@@ -77,7 +83,8 @@ object GameClient extends js.JSApp {
         else
           jQuery("[id^=cell_" + response.nextGameId + "]").prop("disabled", false)
 
-        jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
+        jQuery("[id^=status-").hide()
+        jQuery("#status-your-turn").show()
     }
   }
 
@@ -88,6 +95,7 @@ object GameClient extends js.JSApp {
 
   private def processInitialTurn(response: GameStartResponse): Unit = {
     clearGameBoard()
+    jQuery("#nameO").removeClass("uk-text-muted")
     jQuery("#play_again").hide()
     jQuery("#winsO").show()
     setPlayerLetter(response.playerLetter)
@@ -95,14 +103,17 @@ object GameClient extends js.JSApp {
     if (response.turnIndicator == MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN) {
       yourTurn = true
       jQuery("[id^=cell_]").prop("disabled", false)
-      jQuery("#status").text(MessageKeyConstants.YOUR_TURN_STATUS)
+      jQuery("[id^=status-").hide()
+      jQuery("#status-your-turn").show()
     } else if (response.turnIndicator == MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING) {
-      jQuery("#status").text(MessageKeyConstants.STRATEGIZING_STATUS)
+      jQuery("[id^=status-").hide()
+      jQuery("#status-thinking").show()
     }
   }
 
   private def processGameTied(response: GameTiedResponse): Unit = {
-    jQuery("#status").text(MessageKeyConstants.TIED_STATUS)
+    jQuery("[id^=status-").hide()
+    jQuery("#status-tie-game").show()
 
     // update the board if you didn't make the last move
     if (response.lastPlayer != player) {
@@ -121,7 +132,8 @@ object GameClient extends js.JSApp {
     jQuery("#winner_" + response.lastGameId).show()
     jQuery("#winsX").html(response.winsX + " wins")
     jQuery("#winsO").html(response.winsO + " wins")
-    jQuery("#status").text(MessageKeyConstants.YOU_WIN_STATUS)
+    jQuery("[id^=status-").hide()
+    jQuery("#status-you-win").show()
     jQuery("#play_again").show()
   }
 
@@ -132,7 +144,8 @@ object GameClient extends js.JSApp {
     jQuery("#winner_" + response.lastGameId).show()
     jQuery("#winsX").html(response.winsX + " wins")
     jQuery("#winsO").html(response.winsO + " wins")
-    jQuery("#status").text(MessageKeyConstants.YOU_LOSE_STATUS)
+    jQuery("[id^=status-").hide()
+    jQuery("#status-you-lose").show()
     jQuery("#play_again").show()
   }
 
@@ -194,17 +207,20 @@ object GameClient extends js.JSApp {
             jQuery("#" + thiz.id).html(player)
             // Disable all buttons
             jQuery("[id^=cell_]").prop("disabled", true)
-            jQuery("#status").text(MessageKeyConstants.STRATEGIZING_STATUS)
+            jQuery("[id^=status-").hide()
+            jQuery("#status-thinking").show()
           }
         }
       }: js.ThisFunction)
 
       ws.get.onopen = { (e: dom.Event) =>
-        jQuery("#status").text(MessageKeyConstants.WAITING_STATUS)
+        jQuery("[id^=status-").hide()
+        jQuery("#status-waiting").show()
       }
 
       ws.get.onclose = { (e: dom.Event) =>
-        jQuery("#status").text(MessageKeyConstants.WEBSOCKET_CLOSED_STATUS)
+        jQuery("[id^=status-").hide()
+        jQuery("#status-game-over").show()
       }
 
       // Process turn message ("push") from the server.
@@ -235,9 +251,12 @@ object GameClient extends js.JSApp {
   private def processGameOver(payload: GameOverEvent): Unit = {
     jQuery("[id^=cell_]").prop("disabled", true)
     jQuery("#play_again").hide()
-    if (payload.fromPlayer == player)
-      jQuery("#status").text("You ended the game! GAME OVER!")
-    else
-      jQuery("#status").text("Your opponent left the game! GAME OVER!")
+    if (payload.fromPlayer == player) {
+      jQuery("[id^=status-").hide()
+      jQuery("#status-game-over-you-ended").show()
+    } else {
+      jQuery("[id^=status-").hide()
+      jQuery("#status-game-over").show()
+    }
   }
 }
