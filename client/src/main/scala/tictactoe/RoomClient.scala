@@ -38,7 +38,9 @@ object RoomClient extends js.JSApp {
         case MessageKeyConstants.MESSAGE_NEW_GAME_CREATED_EVENT => handleGameCreated(payload)
         case MessageKeyConstants.MESSAGE_GAME_STARTED_EVENT => handleGameStarted(payload)
         case MessageKeyConstants.MESSAGE_GAME_OVER => handleGameOver(payload)
-        case MessageKeyConstants.MESSAGE_GAME_REGISTRY_EVENT => handleGameRegistry(payload)
+        case MessageKeyConstants.MESSAGE_GAME_STREAM_WON_EVENT => handleGameStreamWonEvent(payload)
+        case MessageKeyConstants.MESSAGE_OPEN_GAME_STREAM_UPDATE_EVENT => handleOpenGameStreamUpdateEvent(payload)
+        case MessageKeyConstants.MESSAGE_CLOSED_GAME_STREAM_UPDATE_EVENT => handleClosedGameStreamUpdateEvent(payload)
         case "ping" => dom.console.info("pong")
         case _ => dom.console.error("unmatched message from the server", wrapper.t)
       }
@@ -62,7 +64,7 @@ object RoomClient extends js.JSApp {
     jQuery("#gameList").show()
     jQuery("#gameListHeader").show()
     jQuery("#game-" + pl.uuid).remove()
-    jQuery("#gameList").append(closedGameRow(pl.uuid, xName, oName))
+    jQuery("#gameList").append(closedGameRow(pl.uuid, xName, oName, 0, 0, 0))
   }
 
   private def handleGameOver(payload: String): Unit = {
@@ -77,18 +79,19 @@ object RoomClient extends js.JSApp {
     }
   }
 
-  private def handleGameRegistry(payload: String): Unit = {
-    val pl = read[GameRegistryEvent](payload)
-    pl.openGames.foreach(g => jQuery("#gameList").append(openGameRow(g.uuid, g.x)))
-    pl.closedGames.foreach(g => jQuery("#gameList").append(closedGameRow(g.uuid, g.x, g.o)))
-
-    if (pl.openGames.length > 0 || pl.closedGames.length > 0) {
-      jQuery("#gameList").show()
-      jQuery("#gameListHeader").show()
-    } else if (pl.openGames.length == 0 && pl.closedGames.length == 0) {
-      jQuery("#gameList").hide()
-      jQuery("#gameListHeader").hide()
-    }
+  private def handleOpenGameStreamUpdateEvent(payload: String): Unit = {
+    val pl = read[OpenGameStreamUpdateEvent](payload)
+    jQuery("#game-" + pl.uuid).remove()
+    jQuery("#gameList").append(openGameRow(pl.uuid, pl.xName))
+    jQuery("#gameList").show()
+    jQuery("#gameListHeader").show()
+  }
+  private def handleClosedGameStreamUpdateEvent(payload: String): Unit = {
+    val pl = read[ClosedGameStreamUpdateEvent](payload)
+    jQuery("#game-" + pl.uuid).remove()
+    jQuery("#gameList").append(closedGameRow(pl.uuid, pl.xName, pl.oName, pl.xWins, pl.oWins, pl.totalGames))
+    jQuery("#gameList").show()
+    jQuery("#gameListHeader").show()
   }
 
   private def openGameRow(uuid: String, xName: String) = {
@@ -107,14 +110,20 @@ object RoomClient extends js.JSApp {
     ).render
   }
 
-  private def closedGameRow(uuid: String, xName: String, oName: String) = {
+  private def closedGameRow(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int) = {
     tr(id:="game-" + uuid,
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(`class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${0} wins")))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(`class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${0} wins")))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(id:="game-" + uuid + "-xWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${xWins} wins")))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(id:="game-" + uuid + "-oWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${oWins} wins")))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(totalGames))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0"))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("76"))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("12:03")))
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0")))
     ).render
+  }
+
+  private def handleGameStreamWonEvent(payload: String): Unit = {
+    val p = read[GameStreamWonEvent](payload)
+    jQuery("game-" + p.uuid + "-xWins").html(p.winsPlayerX.toString + " wins")
+    jQuery("game-" + p.uuid + "-oWins").html(p.winsPlayerO.toString + " wins")
   }
 
 }

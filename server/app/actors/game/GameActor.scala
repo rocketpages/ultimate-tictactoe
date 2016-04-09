@@ -52,6 +52,10 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
     }
+    case Event(m: SendGameStreamUpdateCommand, p: OnePlayer) => {
+      gameEngine ! OpenGameStreamUpdateMessage(uuid, p.playerX.name)
+      stay using p
+    }
   }
 
   when(WaitingForSecondPlayer) {
@@ -62,6 +66,10 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
       p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
+    }
+    case Event(m: SendGameStreamUpdateCommand, p: OnePlayer) => {
+      gameEngine ! OpenGameStreamUpdateMessage(uuid, p.playerX.name)
+      stay using p
     }
   }
 
@@ -94,6 +102,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         }
       }
 
+      gameEngine ! GameStreamUpdate(uuid, x.wins, o.wins, totalGames)
       goto(AwaitRematch) using AwaitRematch(x, o, None, None, totalGames)
     }
     // PlayerActor sends this
@@ -107,6 +116,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       game.playerO.playerActor ! response
       game.playerX.playerActor ! response
 
+      gameEngine ! GameStreamUpdate(uuid, game.playerX.wins, game.playerO.wins, totalGames)
       goto(AwaitRematch) using AwaitRematch(game.playerX, game.playerO, None, None, totalGames)
     }
     case Event(m: GameTerminatedMessage, game: ActiveGame) => {
@@ -114,6 +124,10 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       game.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       game.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
+    }
+    case Event(m: SendGameStreamUpdateCommand, game: ActiveGame) => {
+      gameEngine ! ClosedGameStreamUpdateMessage(uuid, game.playerX.name, game.playerO.name, game.playerX.wins, game.playerO.wins, game.totalGames)
+      stay using game
     }
   }
 
@@ -155,11 +169,15 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         }
       }
     }
-    case Event(m: GameTerminatedMessage, game: ActiveGame) => {
+    case Event(m: GameTerminatedMessage, state: AwaitRematch) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
-      game.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
-      game.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      state.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
+      state.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
+    }
+    case Event(m: SendGameStreamUpdateCommand, state: AwaitRematch) => {
+      gameEngine ! ClosedGameStreamUpdateMessage(uuid, state.playerX.name, state.playerO.name, state.playerX.wins, state.playerO.wins, state.totalGames)
+      stay using state
     }
   }
 

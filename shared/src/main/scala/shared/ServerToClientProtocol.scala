@@ -32,11 +32,13 @@ object ServerToClientProtocol {
 
   case class GameStartedEvent(uuid: String, x: String, o: String) extends Payload
 
-  case class GameRegistryEvent(openGames: Array[OpenGameRecord], closedGames: Array[ClosedGameRecord]) extends Payload
-  case class OpenGameRecord(uuid: String, x: String)
-  case class ClosedGameRecord(uuid: String, x: String, o: String)
-
   case class GameOverEvent(uuid: String, fromPlayer: String) extends Payload
+
+  case class GameStreamWonEvent(uuid: String, winsPlayerX: Int, winsPlayerO: Int, totalGames: Int) extends Payload
+
+  case class OpenGameStreamUpdateEvent(uuid: String, xName: String) extends Payload
+
+  case class ClosedGameStreamUpdateEvent(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int) extends Payload
 
   type MessageType = String
 
@@ -52,6 +54,9 @@ object ServerToClientProtocol {
   def wrapGameTiedResponse(m: GameTiedResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_TIED), m)
   def wrapGameCreatedEvent(m: GameCreatedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_NEW_GAME_CREATED_EVENT), m)
   def wrapGameStartedEvent(m: GameStartedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STARTED_EVENT), m)
-  def wrapGameRegistryEvent(m: GameRegistryEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_REGISTRY_EVENT), m)
   def wrapGameOverEvent(m: GameOverEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_OVER), m)
+  def wrapGameStreamWonEvent(m: GameStreamWonEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STREAM_WON_EVENT), m)
+  def wrapOpenGameStreamUpdateEvent(m: OpenGameStreamUpdateEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_OPEN_GAME_STREAM_UPDATE_EVENT), m)
+  def wrapClosedGameStreamUpdateEvent(m: ClosedGameStreamUpdateEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_CLOSED_GAME_STREAM_UPDATE_EVENT), m)
+
 }

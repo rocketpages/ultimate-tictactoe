@@ -19,5 +19,9 @@ object ActorMessageProtocol {
   case class GameOverMessage(uuid: String, fromPlayer: String)
   case class GameTerminatedMessage(terminatedByPlayer: String)
   case class GameCreatedMessage(gameActor: ActorRef, playerLetter: PlayerLetter)
+  case class GameStreamUpdate(uuid: String, winsPlayerX: Int, winsPlayerO: Int, totalGamesPlayed: Int)
+  case class SendGameStreamUpdateCommand()
+  case class OpenGameStreamUpdateMessage(uuid: String, xName: String)
+  case class ClosedGameStreamUpdateMessage(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int)
 
 }

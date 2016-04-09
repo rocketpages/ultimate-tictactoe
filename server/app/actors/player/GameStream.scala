@@ -2,12 +2,15 @@ package actors.player
 
 import akka.actor._
 import akka.event.Logging
-import model.akka.ActorMessageProtocol.{JoinGameMessage, RegisterGameStreamSubscriberMessage}
-import shared.ClientToServerProtocol.{JoinGameCommand, ClientToServerWrapper}
-import shared.ServerToClientProtocol._
+import model.akka.ActorMessageProtocol.RegisterGameStreamSubscriberMessage
 import shared.MessageKeyConstants
+import shared.ServerToClientProtocol._
 import upickle.default._
 
+/**
+  * Actor-managed websocket connection for players who are on the main page. Maintains the output channel
+  * for game updates from the GameEngineActor.
+  */
 object GameStream {
   def props(out: ActorRef, gameEngineActor: ActorRef) = Props(new GameStream(out, gameEngineActor))
 }
@@ -25,8 +28,8 @@ class GameStream(out: ActorRef, gameEngineActor: ActorRef) extends Actor {
     self ! wrapHandshakeResponse(HandshakeResponse(status = MessageKeyConstants.MESSAGE_OK))
 
     // start keepalive ping/pong to keep the websocket connection open
-    import scala.concurrent.duration._
     import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.duration._
     scheduler = context.system.scheduler.schedule(
       initialDelay = 0 seconds,
       interval = 30 seconds,

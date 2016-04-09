@@ -49,30 +49,24 @@ class GameEngineActor extends Actor {
     case RegisterGameStreamSubscriberMessage => {
       subscribers += sender()
 
-      val openGamesRecord = games.foldLeft(Array[OpenGameRecord]())(filterOpenGames)
-      val closedGamesRecord = games.foldLeft(Array[ClosedGameRecord]())(filterClosedGames)
-
-      sender() ! ServerToClientProtocol.wrapGameRegistryEvent(GameRegistryEvent(openGamesRecord, closedGamesRecord))
+      for (game <- games) {
+        game._2.game ! SendGameStreamUpdateCommand()
+      }
+    }
+    case m: OpenGameStreamUpdateMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapOpenGameStreamUpdateEvent(new OpenGameStreamUpdateEvent(m.uuid, m.xName)))
+    }
+    case m: ClosedGameStreamUpdateMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapClosedGameStreamUpdateEvent(new ClosedGameStreamUpdateEvent(m.uuid, m.xName, m.oName, m.xWins, m.oWins, m.totalGames)))
     }
     // notify all the game stream subscribers
     case m: GameOverMessage => {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameOverEvent(GameOverEvent(m.uuid, m.fromPlayer)))
       games.remove(m.uuid)
     }
+    case m: GameStreamUpdate => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamWonEvent(GameStreamWonEvent(m.uuid, m.winsPlayerX, m.winsPlayerO, m.totalGamesPlayed)))
+    }
     case x => log.error("Invalid type in receive - ", x)
-  }
-
-  private def filterOpenGames(array: Array[OpenGameRecord], game: (String, GameRecord)): Array[OpenGameRecord] = {
-    game._2.oName match {
-      case None => array :+ OpenGameRecord(game._2.uuid, game._2.xName.get)
-      case _ => array
-    }
-  }
-
-  private def filterClosedGames(array: Array[ClosedGameRecord], game: (String, GameRecord)): Array[ClosedGameRecord] = {
-    game._2.oName match {
-      case None => array
-      case _ => array :+ ClosedGameRecord(game._2.uuid, game._2.xName.get, game._2.oName.get)
-    }
   }
 }
