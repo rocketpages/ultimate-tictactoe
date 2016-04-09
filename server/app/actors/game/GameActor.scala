@@ -102,7 +102,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         }
       }
 
-      gameEngine ! GameStreamUpdate(uuid, x.wins, o.wins, totalGames)
+      gameEngine ! GameWonSubscriberUpdateMessage(uuid, x.wins, o.wins, totalGames)
       goto(AwaitRematch) using AwaitRematch(x, o, None, None, totalGames)
     }
     // PlayerActor sends this
@@ -116,7 +116,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       game.playerO.playerActor ! response
       game.playerX.playerActor ! response
 
-      gameEngine ! GameStreamUpdate(uuid, game.playerX.wins, game.playerO.wins, totalGames)
+      gameEngine ! GameTiedSubscriberUpdateMessage(uuid, totalGames)
       goto(AwaitRematch) using AwaitRematch(game.playerX, game.playerO, None, None, totalGames)
     }
     case Event(m: GameTerminatedMessage, game: ActiveGame) => {

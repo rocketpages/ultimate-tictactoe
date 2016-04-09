@@ -114,16 +114,18 @@ object RoomClient extends js.JSApp {
     tr(id:="game-" + uuid,
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(id:="game-" + uuid + "-xWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${xWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(id:="game-" + uuid + "-oWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${oWins} wins")))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(totalGames))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0"))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-games", totalGames))),
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", "0"))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0")))
     ).render
   }
 
   private def handleGameStreamWonEvent(payload: String): Unit = {
     val p = read[GameStreamWonEvent](payload)
-    jQuery("game-" + p.uuid + "-xWins").html(p.winsPlayerX.toString + " wins")
-    jQuery("game-" + p.uuid + "-oWins").html(p.winsPlayerO.toString + " wins")
+    dom.console.log("updating after game won!")
+    jQuery("#game-" + p.uuid + "-xWins").html(p.winsPlayerX.toString + " wins")
+    jQuery("#game-" + p.uuid + "-oWins").html(p.winsPlayerO.toString + " wins")
+    jQuery("#game-" + p.uuid + "-total-games").html(p.totalGames.toString)
   }
 
 }

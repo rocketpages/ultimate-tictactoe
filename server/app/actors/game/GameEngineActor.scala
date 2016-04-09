@@ -64,8 +64,11 @@ class GameEngineActor extends Actor {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameOverEvent(GameOverEvent(m.uuid, m.fromPlayer)))
       games.remove(m.uuid)
     }
-    case m: GameStreamUpdate => {
+    case m: GameWonSubscriberUpdateMessage => {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamWonEvent(GameStreamWonEvent(m.uuid, m.winsPlayerX, m.winsPlayerO, m.totalGamesPlayed)))
+    }
+    case m: GameTiedSubscriberUpdateMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamTiedEvent(GameStreamTiedEvent(m.uuid, m.totalGamesPlayed)))
     }
     case x => log.error("Invalid type in receive - ", x)
   }
