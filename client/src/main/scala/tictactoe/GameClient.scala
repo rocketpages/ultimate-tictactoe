@@ -18,6 +18,7 @@ object GameClient extends js.JSApp {
   // WebSocket connection
   var ws: Option[WebSocket] = None
 
+  var yourMoves: Int = 0
   var yourTurn: Boolean = false
   var player: String = ""
   var opponent: String = ""
@@ -56,6 +57,9 @@ object GameClient extends js.JSApp {
     // Show their turn info on the game board.
     jQuery("#" + response.gridIdSelector).addClass(opponent)
     jQuery("#" + response.gridIdSelector).html(opponent)
+
+    jQuery("#xMoves").html(response.xTurns.toString)
+    jQuery("#oMoves").html(response.oTurns.toString)
 
     // Switch to your turn.
     response.status match {
@@ -209,6 +213,8 @@ object GameClient extends js.JSApp {
             jQuery("[id^=cell_]").prop("disabled", true)
             jQuery("[id^=status-").hide()
             jQuery("#status-thinking").show()
+            yourMoves = yourMoves+1
+            jQuery("#" + player.toLowerCase + "Moves").html(yourMoves.toString)
           }
         }
       }: js.ThisFunction)

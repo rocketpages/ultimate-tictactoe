@@ -7,7 +7,8 @@ import akka.actor.ActorRef
 object ActorMessageProtocol {
 
   case class StartGameMessage(turnIndicator: String, playerLetter: PlayerLetter, game: ActorRef, nameX: String, nameO: String)
-  case class TurnMessage(playerLetter: PlayerLetter, game: String, grid: String, playerX: Option[ActorRef] = None, playerO: Option[ActorRef] = None)
+  case class TurnMessage(playerLetter: PlayerLetter, game: String, grid: String)
+  case class ProcessNextTurnMessage(playerLetter: PlayerLetter, game: String, grid: String, x: ActorRef, o: ActorRef, xTurns: Int, oTurns: Int)
   case class RegisterGameStreamSubscriberMessage()
   case class UpdateSubscribersWithGameStatusMessage(subscribers: List[ActorRef])
   case class CreateGameMessage(player: ActorRef, name: String)
@@ -24,5 +25,6 @@ object ActorMessageProtocol {
   case class SendGameStreamUpdateCommand()
   case class OpenGameStreamUpdateMessage(uuid: String, xName: String)
   case class ClosedGameStreamUpdateMessage(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int)
+  case class GameStreamTurnUpdateMessage(uuid: String, xTurns: Int, oTurns: Int)
 
 }

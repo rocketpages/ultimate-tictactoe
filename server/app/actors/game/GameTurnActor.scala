@@ -59,45 +59,45 @@ class GameTurnActor extends Actor {
   var validBoardId: Option[Int] = None
 
   def receive = {
-    case req: TurnMessage => processTurnCommand(req)
+    case m: ProcessNextTurnMessage => processNextTurnMessage(m)
     case x => log.error("GameTurnActor: Invalid message type: " + x.toString + " / sender: " + sender.toString)
   }
 
-  private def processTurnCommand(req: TurnMessage) {
+  private def processNextTurnMessage(m: ProcessNextTurnMessage) {
     // check to make sure the current turn is being played on a valid square
-    if (validBoardId.isEmpty || validBoardId.get == req.game.toInt) {
-      val gameStatus = processTurn(req.game.toInt, req.grid.toInt, req.playerLetter)
+    if (validBoardId.isEmpty || validBoardId.get == m.game.toInt) {
+      val gameStatus = processTurn(m.game.toInt, m.grid.toInt, m.playerLetter)
       if (gameStatus == GameStatus.WON)
-        handleGameWon(req)
+        handleGameWon(m)
       else if (gameStatus == GameStatus.TIED)
-        handleGameTied(req)
+        handleGameTied(m)
       else
-        handleNextTurn(req)
+        handleNextTurn(m)
     } else {
       log.error("Invalid board being played (not playing a valid square)")
     }
   }
 
-  private def handleNextTurn(req: TurnMessage) {
-    val (opponent, player) = if (req.playerLetter == PlayerLetter.O)
-      (req.playerX.get, req.playerO.get)
+  private def handleNextTurn(m: ProcessNextTurnMessage) {
+    val (opponent, player) = if (m.playerLetter == PlayerLetter.O)
+      (m.x, m.o)
     else
-      (req.playerO.get, req.playerX.get)
+      (m.o, m.x)
 
-    val lastBoardWon = boardsWon(req.game.toInt - 1).isDefined
+    val lastBoardWon = boardsWon(m.game.toInt - 1).isDefined
 
-    opponent ! wrapOpponentTurnResponse(OpponentTurnResponse(gameId = req.game.toInt, gridId = req.grid.toInt, nextGameId = req.grid.toInt, lastBoardWon = lastBoardWon, boardsWonArr = boardsWonArray, status = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN))
+    opponent ! wrapOpponentTurnResponse(OpponentTurnResponse(m.game.toInt, m.grid.toInt, m.grid.toInt, lastBoardWon, boardsWonArray, MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, m.xTurns, m.oTurns))
 
     if (lastBoardWon) {
-      player ! wrapBoardWonResponse(BoardWonResponse(req.game))
+      player ! wrapBoardWonResponse(BoardWonResponse(m.game))
     }
   }
 
-  private def handleGameWon(m: TurnMessage) {
+  private def handleGameWon(m: ProcessNextTurnMessage) {
     context.parent ! GameWonMessage(m.playerLetter.toString, m.game.toInt, m.grid.toInt)
   }
 
-  private def handleGameTied(m: TurnMessage) {
+  private def handleGameTied(m: ProcessNextTurnMessage) {
     context.parent ! GameTiedMessage(m.playerLetter.toString, m.game.toInt, m.grid.toInt)
   }
 

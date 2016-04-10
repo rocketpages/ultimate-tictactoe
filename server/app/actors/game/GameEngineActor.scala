@@ -70,6 +70,9 @@ class GameEngineActor extends Actor {
     case m: GameTiedSubscriberUpdateMessage => {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamTiedEvent(GameStreamTiedEvent(m.uuid, m.totalGamesPlayed)))
     }
+    case m: GameStreamTurnUpdateMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamTurnEvent(GameStreamTurnEvent(m.uuid, m.xTurns, m.oTurns)))
+    }
     case x => log.error("Invalid type in receive - ", x)
   }
 }

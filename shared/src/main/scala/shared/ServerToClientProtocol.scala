@@ -12,7 +12,7 @@ object ServerToClientProtocol {
 
   case class Ping() extends Payload
 
-  case class OpponentTurnResponse(gameId: Int, gridId: Int, nextGameId: Int, lastBoardWon: Boolean, boardsWonArr: Array[String], status: String) extends Payload {
+  case class OpponentTurnResponse(gameId: Int, gridId: Int, nextGameId: Int, lastBoardWon: Boolean, boardsWonArr: Array[String], status: String, xTurns: Int, oTurns: Int) extends Payload {
     val gridIdSelector = "cell_" + gameId + gridId
   }
 
@@ -42,6 +42,8 @@ object ServerToClientProtocol {
 
   case class ClosedGameStreamUpdateEvent(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int) extends Payload
 
+  case class GameStreamTurnEvent(uuid: String, xTurns: Int, oTurns: Int) extends Payload
+
   type MessageType = String
 
   case class ServerToClientWrapper(t: MessageType, p: Payload)
@@ -61,5 +63,6 @@ object ServerToClientProtocol {
   def wrapGameStreamTiedEvent(m: GameStreamTiedEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STREAM_TIED_EVENT), m)
   def wrapOpenGameStreamUpdateEvent(m: OpenGameStreamUpdateEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_OPEN_GAME_STREAM_UPDATE_EVENT), m)
   def wrapClosedGameStreamUpdateEvent(m: ClosedGameStreamUpdateEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_CLOSED_GAME_STREAM_UPDATE_EVENT), m)
+  def wrapGameStreamTurnEvent(m: GameStreamTurnEvent) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_GAME_STREAM_TURN_EVENT), m)
 
 }

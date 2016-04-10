@@ -16,18 +16,29 @@
 </nav>
 
 <div class="uk-grid uk-margin-top">
-    <div class="uk-hidden-small uk-width-medium-1-10 uk-width-large-2-10">&nbsp;</div>
-    <div class="uk-width-1-2 uk-width-medium-4-10 uk-width-large-3-10">
+    <div class="uk-hidden-small uk-width-medium-2-10 uk-width-large-2-10">&nbsp;</div>
+    <div class="uk-width-1-2 uk-width-medium-3-10 uk-width-large-2-10">
         <div class="uk-panel-box uk-text-center">
             <div class="uk-container-center"><span id="nameX">@nameX.getOrElse("Anonymous")</span> <div id="winsX" class="uk-badge">0 wins</div></div>
+            <div id="xStats" class="uk-grid uk-margin-small-top">
+                <div class="uk-width-1-2 uk-text-small uk-text-center"><div class="uk-container-center">Moves: <span id="xMoves">0</span></div></div>
+                <div class="uk-width-1-2 uk-text-small uk-text-center"><div class="uk-container-center">Time: <span id="xTime">00:00</span></div></div>
+            </div>
         </div>
     </div>
-    <div class="uk-width-1-2 uk-width-medium-4-10 uk-width-large-3-10">
+    <div class="uk-width-large-2-10 uk-visible-large" style="margin-top: 10px;">
+        &nbsp;
+    </div>
+    <div class="uk-width-1-2 uk-width-medium-3-10 uk-width-large-2-10">
         <div class="uk-panel-box uk-text-center">
             <div class="uk-container-center"><span id="nameO" class="uk-text-muted">@nameO.getOrElse("Awaiting opponent")</span> <div id="winsO" class="uk-badge" style="display:none;">0 wins</div></div>
+            <div id="oStats" class="uk-grid uk-margin-small-top" class="uk-text-muted">
+                <div class="uk-width-1-2 uk-text-small uk-text-center"><div class="uk-container-center">Moves: <span id="oMoves">0</span></div></div>
+                <div class="uk-width-1-2 uk-text-small uk-text-center"><div class="uk-container-center">Time: <span id="oTime">00:00</span></div></div>
+            </div>
         </div>
     </div>
-    <div class="uk-hidden-small uk-width-medium-1-10 uk-width-large-2-10" style="margin-top: 10px;">&nbsp;</div>
+    <div class="uk-hidden-small uk-width-medium-2-10 uk-width-large-2-10" style="margin-top: 10px;">&nbsp;</div>
 </div>
 
 <div class="uk-grid">

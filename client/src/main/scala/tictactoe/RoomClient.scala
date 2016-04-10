@@ -41,6 +41,7 @@ object RoomClient extends js.JSApp {
         case MessageKeyConstants.MESSAGE_GAME_STREAM_WON_EVENT => handleGameStreamWonEvent(payload)
         case MessageKeyConstants.MESSAGE_OPEN_GAME_STREAM_UPDATE_EVENT => handleOpenGameStreamUpdateEvent(payload)
         case MessageKeyConstants.MESSAGE_CLOSED_GAME_STREAM_UPDATE_EVENT => handleClosedGameStreamUpdateEvent(payload)
+        case MessageKeyConstants.MESSAGE_GAME_STREAM_TURN_EVENT => handleGameStreamTurnEvent(payload)
         case "ping" => dom.console.info("pong")
         case _ => dom.console.error("unmatched message from the server", wrapper.t)
       }
@@ -116,16 +117,21 @@ object RoomClient extends js.JSApp {
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(id:="game-" + uuid + "-oWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${oWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-games", totalGames))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", "0"))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div("0")))
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-elapsed-time", "0")))
     ).render
   }
 
   private def handleGameStreamWonEvent(payload: String): Unit = {
     val p = read[GameStreamWonEvent](payload)
-    dom.console.log("updating after game won!")
     jQuery("#game-" + p.uuid + "-xWins").html(p.winsPlayerX.toString + " wins")
     jQuery("#game-" + p.uuid + "-oWins").html(p.winsPlayerO.toString + " wins")
     jQuery("#game-" + p.uuid + "-total-games").html(p.totalGames.toString)
+  }
+
+  private def handleGameStreamTurnEvent(payload: String): Unit = {
+    val p = read[GameStreamTurnEvent](payload)
+    val totalMoves = p.oTurns + p.xTurns
+    jQuery("#game-" + p.uuid + "-total-moves").html(totalMoves.toString)
   }
 
 }

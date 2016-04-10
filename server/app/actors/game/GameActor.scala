@@ -30,7 +30,7 @@ final case class AwaitRematch(playerX: Player, playerO: Player, rematchPlayerX: 
 case object Uninitialized extends Data
 
 // inner class
-final case class Player(playerActor: ActorRef, name: String, wins: Int)
+final case class Player(playerActor: ActorRef, name: String, wins: Int, turns: Int, elapsedTime: Int)
 
 object GameActor {
   def props(gameEngineActor: ActorRef, uuid: String) = Props(new GameActor(gameEngineActor, uuid))
@@ -45,7 +45,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   when(WaitingForFirstPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
-      goto(WaitingForSecondPlayer) using OnePlayer(Player(req.player, req.name, 0))
+      goto(WaitingForSecondPlayer) using OnePlayer(Player(req.player, req.name, 0, 0, 0))
     }
     case Event(m: GameTerminatedMessage, p: OnePlayer) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
@@ -60,7 +60,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   when(WaitingForSecondPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
-      goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0), 0)
+      goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0, 0, 0), 0)
     }
     case Event(m: GameTerminatedMessage, p: OnePlayer) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
@@ -74,9 +74,17 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
   }
 
   when(ActiveGame) {
-    case Event(turn: TurnMessage, game: ActiveGame) => {
-      game.gameTurnActor ! TurnMessage(turn.playerLetter, turn.game, turn.grid, Some(game.playerX.playerActor), Some(game.playerO.playerActor))
-      stay using game
+    case Event(m: TurnMessage, game: ActiveGame) => {
+      val (x, o) = {
+        m.playerLetter.toString match {
+          case "X" => (game.playerX.copy(turns = (game.playerX.turns + 1)), game.playerO)
+          case "O" => (game.playerX, game.playerO.copy(turns = (game.playerO.turns + 1)))
+        }
+      }
+      game.gameTurnActor ! ProcessNextTurnMessage(m.playerLetter, m.game, m.grid, x.playerActor, o.playerActor, x.turns, o.turns)
+      gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
+      val g = game.copy(playerX = x, playerO = o)
+      stay using g
     }
     // PlayerActor sends this
     case Event(m: GameWonMessage, game: ActiveGame) => {
