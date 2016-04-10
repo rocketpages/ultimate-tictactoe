@@ -28,8 +28,6 @@ class GameEngineActor extends Actor {
 
       // update the game engine record with the new player
       games.update(c.uuid, GameRecord(c.uuid, g.game, g.xName, Some(c.name)))
-
-      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(g.uuid, g.xName.getOrElse(""), g.oName.getOrElse(""))))
     }
     case c: CreateGameMessage => {
       // create the game
@@ -72,6 +70,9 @@ class GameEngineActor extends Actor {
     }
     case m: GameStreamTurnUpdateMessage => {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStreamTurnEvent(GameStreamTurnEvent(m.uuid, m.xTurns, m.oTurns)))
+    }
+    case m: GameStreamGameStartedMessage => {
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapGameStartedEvent(new GameStartedEvent(m.uuid, m.xName, m.oName)))
     }
     case x => log.error("Invalid type in receive - ", x)
   }

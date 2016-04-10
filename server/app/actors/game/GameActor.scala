@@ -203,6 +203,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         case g: ActiveGame => {
           g.playerX.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.playerX.name, g.playerO.name)
           g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
+          gameEngine ! GameStreamGameStartedMessage(uuid, g.playerX.name, g.playerO.name)
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }

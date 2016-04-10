@@ -26,5 +26,6 @@ object ActorMessageProtocol {
   case class OpenGameStreamUpdateMessage(uuid: String, xName: String)
   case class ClosedGameStreamUpdateMessage(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int)
   case class GameStreamTurnUpdateMessage(uuid: String, xTurns: Int, oTurns: Int)
+  case class GameStreamGameStartedMessage(uuid: String, xName: String, oName: String)
 
 }

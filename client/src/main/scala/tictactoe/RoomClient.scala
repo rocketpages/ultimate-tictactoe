@@ -98,7 +98,7 @@ object RoomClient extends js.JSApp {
   private def openGameRow(uuid: String, xName: String) = {
     tr(id:="game-" + uuid,
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", xName)),
-      td(`colspan`:="4", `class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", raw(
+      td(`colspan`:="3", `class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", raw(
         "<form action=\"/game/join\" method=\"POST\" class=\"uk-form\">" +
         "<fieldset data-uk-margin>" +
         "<input type=\"text\" name=\"nameO\" id=\"nameO\" placeholder=\"Your name\">" +
@@ -116,8 +116,7 @@ object RoomClient extends js.JSApp {
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(id:="game-" + uuid + "-xWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${xWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(id:="game-" + uuid + "-oWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${oWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-games", totalGames))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", "0"))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-elapsed-time", "0")))
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", "0")))
     ).render
   }
 
