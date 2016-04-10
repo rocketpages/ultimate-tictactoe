@@ -1,5 +1,7 @@
 package tictactoe
 
+import java.time.LocalTime
+
 import org.scalajs.dom
 import org.scalajs.dom.raw.{MessageEvent, WebSocket, HTMLElement}
 import org.scalajs.jquery.jQuery
@@ -12,17 +14,35 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportAll
 
 import upickle.default._
+import scala.scalajs.js.timers._
 
 @JSExportAll
 object GameClient extends js.JSApp {
   // WebSocket connection
   var ws: Option[WebSocket] = None
 
+  var opponentSeconds: Int = 0
+  var yourSeconds: Int = 0
   var yourMoves: Int = 0
   var yourTurn: Boolean = false
+  var activeGame: Boolean = false
   var player: String = ""
   var opponent: String = ""
   var uuid: Option[String] = None
+
+  def convertSecondsToMmSs(seconds: Int) = {
+    val s = seconds % 60
+    val m = (seconds / 60) % 60
+    f"$m%02.0f" + ":" + f"$s%02.0f"
+  }
+
+  def elaspedTimeUpdate = if (yourTurn && activeGame) {
+    yourSeconds = yourSeconds+1
+    jQuery("#" + player.toLowerCase + "Time").html(convertSecondsToMmSs(yourSeconds))
+  } else if (activeGame) {
+    opponentSeconds = opponentSeconds+1
+    jQuery("#" + opponent.toLowerCase + "Time").html(convertSecondsToMmSs(opponentSeconds))
+  }
 
   // Send your turn information to the server
   private def sendTurnMessage(gameId: Int, gridId: Int) {
@@ -98,6 +118,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processInitialTurn(response: GameStartResponse): Unit = {
+    activeGame = true
     clearGameBoard()
     jQuery("#nameO").removeClass("uk-text-muted")
     jQuery("#play_again").hide()
@@ -116,6 +137,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processGameTied(response: GameTiedResponse): Unit = {
+    activeGame = false
     jQuery("[id^=status-").hide()
     jQuery("#status-tie-game").show()
 
@@ -130,6 +152,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processGameWon(response: GameWonResponse): Unit = {
+    activeGame = false
     jQuery("[id^=tile_" + response.lastGameId + "]").hide()
     jQuery("#winner_" + response.lastGameId).html(player)
     jQuery("#winner_" + response.lastGameId).addClass("color-" + player)
@@ -142,6 +165,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processGameLost(response: GameLostResponse): Unit = {
+    activeGame = false
     jQuery("[id^=tile_" + response.lastGameId + "]").hide()
     jQuery("#winner_" + response.lastGameId).html(opponent)
     jQuery("#winner_" + response.lastGameId).addClass("color-" + opponent)
@@ -169,6 +193,8 @@ object GameClient extends js.JSApp {
     */
   def start(nameX: String, nameO: String, gameId: String): Unit = {
     jQuery(dom.document).ready { () =>
+
+      setInterval(1000)(elaspedTimeUpdate)
 
       clearGameBoard()
 
@@ -255,6 +281,7 @@ object GameClient extends js.JSApp {
   }
 
   private def processGameOver(payload: GameOverEvent): Unit = {
+    activeGame = false
     jQuery("[id^=cell_]").prop("disabled", true)
     jQuery("#play_again").hide()
     if (payload.fromPlayer == player) {
