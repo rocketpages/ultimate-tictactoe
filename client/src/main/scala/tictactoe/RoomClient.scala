@@ -65,7 +65,7 @@ object RoomClient extends js.JSApp {
     jQuery("#gameList").show()
     jQuery("#gameListHeader").show()
     jQuery("#game-" + pl.uuid).remove()
-    jQuery("#gameList").append(closedGameRow(pl.uuid, xName, oName, 0, 0, 0))
+    jQuery("#gameList").append(closedGameRow(pl.uuid, xName, oName, 0, 0, 0, 0))
   }
 
   private def handleGameOver(payload: String): Unit = {
@@ -90,7 +90,7 @@ object RoomClient extends js.JSApp {
   private def handleClosedGameStreamUpdateEvent(payload: String): Unit = {
     val pl = read[ClosedGameStreamUpdateEvent](payload)
     jQuery("#game-" + pl.uuid).remove()
-    jQuery("#gameList").append(closedGameRow(pl.uuid, pl.xName, pl.oName, pl.xWins, pl.oWins, pl.totalGames))
+    jQuery("#gameList").append(closedGameRow(pl.uuid, pl.xName, pl.oName, pl.xWins, pl.oWins, pl.totalMoves, pl.totalGames))
     jQuery("#gameList").show()
     jQuery("#gameListHeader").show()
   }
@@ -111,12 +111,12 @@ object RoomClient extends js.JSApp {
     ).render
   }
 
-  private def closedGameRow(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int) = {
+  private def closedGameRow(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalMoves: Int, totalGames: Int) = {
     tr(id:="game-" + uuid,
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${xName}", span(id:="game-" + uuid + "-xWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${xWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(s" ${oName}", span(id:="game-" + uuid + "-oWins", `class`:="uk-badge uk-badge-notification uk-text-small uk-margin-small-left", s"${oWins} wins")))),
       td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-games", totalGames))),
-      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", "0")))
+      td(`class`:="uk-vertical-align", div(`class`:="uk-vertical-align-middle", div(id:="game-" + uuid + "-total-moves", totalMoves)))
     ).render
   }
 

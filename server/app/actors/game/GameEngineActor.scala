@@ -55,7 +55,7 @@ class GameEngineActor extends Actor {
       subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapOpenGameStreamUpdateEvent(new OpenGameStreamUpdateEvent(m.uuid, m.xName)))
     }
     case m: ClosedGameStreamUpdateMessage => {
-      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapClosedGameStreamUpdateEvent(new ClosedGameStreamUpdateEvent(m.uuid, m.xName, m.oName, m.xWins, m.oWins, m.totalGames)))
+      subscribers.toList.foreach(s => s ! ServerToClientProtocol.wrapClosedGameStreamUpdateEvent(new ClosedGameStreamUpdateEvent(m.uuid, m.xName, m.oName, m.xWins, m.oWins, m.totalMoves, m.totalGames)))
     }
     // notify all the game stream subscribers
     case m: GameOverMessage => {

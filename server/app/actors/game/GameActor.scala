@@ -134,7 +134,8 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       stop
     }
     case Event(m: SendGameStreamUpdateCommand, game: ActiveGame) => {
-      gameEngine ! ClosedGameStreamUpdateMessage(uuid, game.playerX.name, game.playerO.name, game.playerX.wins, game.playerO.wins, game.totalGames)
+      val totalMoves = game.playerX.turns + game.playerO.turns
+      gameEngine ! ClosedGameStreamUpdateMessage(uuid, game.playerX.name, game.playerO.name, game.playerX.wins, game.playerO.wins, totalMoves, game.totalGames)
       stay using game
     }
   }
@@ -184,7 +185,8 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       stop
     }
     case Event(m: SendGameStreamUpdateCommand, state: AwaitRematch) => {
-      gameEngine ! ClosedGameStreamUpdateMessage(uuid, state.playerX.name, state.playerO.name, state.playerX.wins, state.playerO.wins, state.totalGames)
+      val totalMoves = state.playerX.turns + state.playerO.turns
+      gameEngine ! ClosedGameStreamUpdateMessage(uuid, state.playerX.name, state.playerO.name, state.playerX.wins, state.playerO.wins, totalMoves, state.totalGames)
       stay using state
     }
   }

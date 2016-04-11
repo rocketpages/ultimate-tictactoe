@@ -40,7 +40,7 @@ object ServerToClientProtocol {
 
   case class OpenGameStreamUpdateEvent(uuid: String, xName: String) extends Payload
 
-  case class ClosedGameStreamUpdateEvent(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalGames: Int) extends Payload
+  case class ClosedGameStreamUpdateEvent(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalMoves: Int, totalGames: Int) extends Payload
 
   case class GameStreamTurnEvent(uuid: String, xTurns: Int, oTurns: Int) extends Payload
 
