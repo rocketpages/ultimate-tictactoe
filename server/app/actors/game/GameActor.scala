@@ -10,22 +10,22 @@ import shared.{ServerToClientProtocol, MessageKeyConstants}
 // game states
 sealed trait State
 
-case object WaitingForFirstPlayer extends State
+case object WaitingForFirstPlayerState extends State
 
-case object WaitingForSecondPlayer extends State
+case object WaitingForSecondPlayerState extends State
 
-case object ActiveGame extends State
+case object ActiveGameState extends State
 
-case object AwaitRematch extends State
+case object AwaitRematchState extends State
 
 // state transition data
 sealed trait Data
 
-final case class OnePlayer(val playerX: Player) extends Data
+final case class OnePlayerData(val playerX: Player) extends Data
 
-final case class ActiveGame(val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
+final case class ActiveGameData(val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
 
-final case class AwaitRematch(playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
+final case class AwaitRematchData(playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
 
 case object Uninitialized extends Data
 
@@ -38,31 +38,31 @@ object GameActor {
 
 class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
-  startWith(WaitingForFirstPlayer, Uninitialized)
+  startWith(WaitingForFirstPlayerState, Uninitialized)
 
-  when(WaitingForFirstPlayer) {
+  when(WaitingForFirstPlayerState) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
-      goto(WaitingForSecondPlayer) using OnePlayer(Player(req.player, req.name, 0, 0, 0))
+      goto(WaitingForSecondPlayerState) using OnePlayerData(Player(req.player, req.name, 0, 0, 0))
     }
   }
 
-  when(WaitingForSecondPlayer) {
-    case Event(req: RegisterPlayerWithGameMessage, p: OnePlayer) => {
-      goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0, 0, 0), 0)
+  when(WaitingForSecondPlayerState) {
+    case Event(req: RegisterPlayerWithGameMessage, p: OnePlayerData) => {
+      goto(ActiveGameState) using ActiveGameData(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0, 0, 0), 0)
     }
-    case Event(m: GameTerminatedMessage, p: OnePlayer) => {
+    case Event(m: GameTerminatedMessage, p: OnePlayerData) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
       p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
     }
-    case Event(m: SendGameStreamUpdateCommand, p: OnePlayer) => {
+    case Event(m: SendGameStreamUpdateCommand, p: OnePlayerData) => {
       gameEngine ! OpenGameStreamUpdateMessage(uuid, p.playerX.name)
       stay using p
     }
   }
 
-  when(ActiveGame) {
-    case Event(m: TurnMessage, game: ActiveGame) => {
+  when(ActiveGameState) {
+    case Event(m: TurnMessage, game: ActiveGameData) => {
       val (x, o) = {
         m.playerLetter.toString match {
           case "X" => (game.playerX.copy(turns = (game.playerX.turns + 1)), game.playerO)
@@ -75,7 +75,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       stay using g
     }
     // PlayerActor sends this
-    case Event(m: GameWonMessage, game: ActiveGame) => {
+    case Event(m: GameWonMessage, game: ActiveGameData) => {
       context.stop(game.gameTurnActor)
 
       val (x, o) = {
@@ -99,10 +99,10 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       }
 
       gameEngine ! GameWonSubscriberUpdateMessage(uuid, x.wins, o.wins, totalGames)
-      goto(AwaitRematch) using AwaitRematch(x, o, None, None, totalGames)
+      goto(AwaitRematchState) using AwaitRematchData(x, o, None, None, totalGames)
     }
     // PlayerActor sends this
-    case Event(m: GameTiedMessage, game: ActiveGame) => {
+    case Event(m: GameTiedMessage, game: ActiveGameData) => {
       // kill the game turn actor, that game is done!
       context.stop(game.gameTurnActor)
 
@@ -113,23 +113,23 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       game.playerX.playerActor ! response
 
       gameEngine ! GameTiedSubscriberUpdateMessage(uuid, totalGames)
-      goto(AwaitRematch) using AwaitRematch(game.playerX, game.playerO, None, None, totalGames)
+      goto(AwaitRematchState) using AwaitRematchData(game.playerX, game.playerO, None, None, totalGames)
     }
-    case Event(m: GameTerminatedMessage, game: ActiveGame) => {
+    case Event(m: GameTerminatedMessage, game: ActiveGameData) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
       game.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       game.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
     }
-    case Event(m: SendGameStreamUpdateCommand, game: ActiveGame) => {
+    case Event(m: SendGameStreamUpdateCommand, game: ActiveGameData) => {
       val totalMoves = game.playerX.turns + game.playerO.turns
       gameEngine ! ClosedGameStreamUpdateMessage(uuid, game.playerX.name, game.playerO.name, game.playerX.wins, game.playerO.wins, totalMoves, game.totalGames)
       stay using game
     }
   }
 
-  when(AwaitRematch) {
-    case Event(m: PlayAgainMessage, state: AwaitRematch) => {
+  when(AwaitRematchState) {
+    case Event(m: PlayAgainMessage, state: AwaitRematchData) => {
       if (m.playAgain == false) {
         gameEngine ! GameOverMessage(uuid, m.player)
         state.playerX.playerActor ! GameOverMessage(uuid, m.player)
@@ -154,25 +154,25 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
             case Some(rematchX) => {
               // both player x and player o have responded to the rematch request
               if (rematchX && rematchO) {
-                goto(ActiveGame) using ActiveGame(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), state.playerX, state.playerO, state.totalGames)
+                goto(ActiveGameState) using ActiveGameData(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), state.playerX, state.playerO, state.totalGames)
               } else {
                 log.error("Game ended in an invalid state")
                 stop
               }
             }
-            case _ => stay using AwaitRematch(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
+            case _ => stay using AwaitRematchData(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
           }
-          case _ => stay using AwaitRematch(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
+          case _ => stay using AwaitRematchData(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
         }
       }
     }
-    case Event(m: GameTerminatedMessage, state: AwaitRematch) => {
+    case Event(m: GameTerminatedMessage, state: AwaitRematchData) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
       state.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       state.playerO.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
       stop
     }
-    case Event(m: SendGameStreamUpdateCommand, state: AwaitRematch) => {
+    case Event(m: SendGameStreamUpdateCommand, state: AwaitRematchData) => {
       val totalMoves = state.playerX.turns + state.playerO.turns
       gameEngine ! ClosedGameStreamUpdateMessage(uuid, state.playerX.name, state.playerO.name, state.playerX.wins, state.playerO.wins, totalMoves, state.totalGames)
       stay using state
@@ -180,26 +180,26 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
   }
 
   onTransition {
-    case WaitingForFirstPlayer -> WaitingForSecondPlayer => {
+    case WaitingForFirstPlayerState -> WaitingForSecondPlayerState => {
       nextStateData match {
-        case p: OnePlayer => {
+        case p: OnePlayerData => {
           p.playerX.playerActor ! GameCreatedMessage(self, PlayerLetter.X)
         }
         case _ => log.error(s"invalid state match for WaitingForFirstPlayer, stateData ${stateData}")
       }
     }
-    case WaitingForSecondPlayer -> ActiveGame =>
+    case WaitingForSecondPlayerState -> ActiveGameState =>
       nextStateData match {
-        case g: ActiveGame => {
+        case g: ActiveGameData => {
           g.playerX.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.playerX.name, g.playerO.name)
           g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
           gameEngine ! GameStreamGameStartedMessage(uuid, g.playerX.name, g.playerO.name)
         }
         case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
       }
-    case AwaitRematch -> ActiveGame =>
+    case AwaitRematchState -> ActiveGameState =>
       nextStateData match {
-        case g: ActiveGame => {
+        case g: ActiveGameData => {
           g.playerX.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.playerX.name, g.playerO.name)
           g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
         }
