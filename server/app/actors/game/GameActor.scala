@@ -36,9 +36,6 @@ object GameActor {
   def props(gameEngineActor: ActorRef, uuid: String) = Props(new GameActor(gameEngineActor, uuid))
 }
 
-/**
-  * Model the game engine as a finite state machine
-  */
 class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   startWith(WaitingForFirstPlayer, Uninitialized)
@@ -46,15 +43,6 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
   when(WaitingForFirstPlayer) {
     case Event(req: RegisterPlayerWithGameMessage, Uninitialized) => {
       goto(WaitingForSecondPlayer) using OnePlayer(Player(req.player, req.name, 0, 0, 0))
-    }
-    case Event(m: GameTerminatedMessage, p: OnePlayer) => {
-      gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
-      p.playerX.playerActor ! GameOverMessage(uuid, m.terminatedByPlayer)
-      stop
-    }
-    case Event(m: SendGameStreamUpdateCommand, p: OnePlayer) => {
-      gameEngine ! OpenGameStreamUpdateMessage(uuid, p.playerX.name)
-      stay using p
     }
   }
 

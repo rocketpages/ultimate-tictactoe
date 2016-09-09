@@ -1,7 +1,5 @@
 package tictactoe
 
-import java.time.LocalTime
-
 import org.scalajs.dom
 import org.scalajs.dom.raw.{MessageEvent, WebSocket, HTMLElement}
 import org.scalajs.jquery.jQuery

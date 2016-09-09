@@ -12,6 +12,9 @@ lazy val server = (project in file("server")).settings(
   libraryDependencies ++= Seq(
     filters,
     jdbc,
+    "org.scalactic" %% "scalactic" % "3.0.0",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+    "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.10",
     "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
     "com.typesafe.slick" %% "slick" % "3.0.2",
     "com.typesafe.play" %% "play-slick" % "1.0.1",
