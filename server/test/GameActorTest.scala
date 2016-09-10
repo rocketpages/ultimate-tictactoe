@@ -1,9 +1,9 @@
 import actors.PlayerLetter
 import actors.game._
 import actors.player.PlayerActor
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit._
-import model.akka.ActorMessageProtocol.{StartGameMessage, GameCreatedMessage, RegisterPlayerWithGameMessage}
+import model.akka.ActorMessageProtocol._
 import org.scalatest.WordSpecLike
 import org.scalatest.Matchers
 import org.scalatest.BeforeAndAfterAll
@@ -59,29 +59,23 @@ import scala.concurrent.duration._
           val fsm = TestFSMRef(new GameActor(gameEngine, uuid))
           val firstPlayerActor = TestActorRef(new PlayerActor(TestProbe().ref, gameEngine))
           val secondPlayerActor = TestActorRef(new PlayerActor(TestProbe().ref, gameEngine))
-
-          // first player creates game
           val firstPlayerReq = RegisterPlayerWithGameMessage(uuid: String, firstPlayerActor, "Bob")
-          fsm ! firstPlayerReq
-
-          // second player registers for game
           val secondPlayerReq = RegisterPlayerWithGameMessage(uuid: String, secondPlayerActor, "Doug")
+
+          fsm ! firstPlayerReq
           fsm ! secondPlayerReq
 
-          // assert that the game is in the ActiveGameState (game has started)
           assert(fsm.stateName == ActiveGameState)
         }
 
         "send StartGameMessage to both players after the second player has registered for the game" in {
           val firstPlayerActor = TestProbe()
           val secondPlayerActor = TestProbe()
-
           val fsm = TestFSMRef(new GameActor(gameEngine, uuid))
-
           val firstPlayerReq = RegisterPlayerWithGameMessage(uuid: String, firstPlayerActor.ref, "Bob")
-          fsm ! firstPlayerReq
-
           val secondPlayerReq = RegisterPlayerWithGameMessage(uuid: String, secondPlayerActor.ref, "Doug")
+
+          fsm ! firstPlayerReq
           fsm ! secondPlayerReq
 
           firstPlayerActor.expectMsg(500 millis, GameCreatedMessage(fsm, PlayerLetter.X))
@@ -92,36 +86,132 @@ import scala.concurrent.duration._
 
       "an active game has started" should {
 
-        "handle a new game turn" in {
-          assert(false)
+        val uuid = java.util.UUID.randomUUID.toString
+        val gameEngine = TestProbe()
+
+        "handle first turn from player X" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+          val firstPlayerReq = RegisterPlayerWithGameMessage(uuid: String, firstPlayerActor.ref, "Bob")
+          val secondPlayerReq = RegisterPlayerWithGameMessage(uuid: String, secondPlayerActor.ref, "Doug")
+
+          fsm ! firstPlayerReq
+          fsm ! secondPlayerReq
+          fsm ! TurnMessage(PlayerLetter.X, "1", "1")
+
+          firstPlayerActor.expectMsg(500 millis, GameCreatedMessage(fsm, PlayerLetter.X))
+          firstPlayerActor.expectMsg(500 millis, StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, fsm, "Bob", "Doug"))
+          secondPlayerActor.expectMsg(500 millis, StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, fsm, "Bob", "Doug"))
+
+          gameEngine.expectMsg(500 millis, GameStreamGameStartedMessage(uuid, "Bob", "Doug"))
+          gameEngine.expectMsg(500 millis, GameStreamTurnUpdateMessage(uuid, 1, 0))
         }
 
-        "handle a game won scenario" in {
-          assert(false)
+        "handle second turn from player O" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+
+          val firstPlayerReq = RegisterPlayerWithGameMessage(uuid: String, firstPlayerActor.ref, "Bob")
+          val secondPlayerReq = RegisterPlayerWithGameMessage(uuid: String, secondPlayerActor.ref, "Doug")
+
+          // establish game
+          fsm ! firstPlayerReq
+          fsm ! secondPlayerReq
+
+          // send first two turn commands
+          fsm ! TurnMessage(PlayerLetter.X, "1", "1")
+          fsm ! TurnMessage(PlayerLetter.O, "2", "2")
+
+          gameEngine.expectMsg(500 millis, GameStreamGameStartedMessage(uuid, "Bob", "Doug"))
+          gameEngine.expectMsg(500 millis, GameStreamTurnUpdateMessage(uuid, 1, 0))
+          gameEngine.expectMsg(500 millis, GameStreamTurnUpdateMessage(uuid, 1, 1))
         }
 
-        "handle a game tied scenario" in {
-          assert(false)
+        "handle a won game scenario by player X and await rematch" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+          val gameTurnActor = TestProbe()
+
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+
+          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+
+          fsm ! GameWonMessage("X", 1, 1)
+
+          assert(fsm.stateName == AwaitRematchState)
+          assert(fsm.stateData == AwaitRematchData(Player(firstPlayerActor.ref, "Bob", 1, 11, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), None, None, 1))
         }
 
-        "handle a terminated game" in {
-          assert(false)
+        "handle a won game scenario by player O and await rematch" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+          val gameTurnActor = TestProbe()
+
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+
+          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+
+          fsm ! GameWonMessage("O", 1, 1)
+
+          assert(fsm.stateName == AwaitRematchState)
+          assert(fsm.stateData == AwaitRematchData(Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 1, 11, 0), None, None, 1))
         }
 
-        "send game updates to subscribers" in {
-          assert(false)
+        "handle a tied game scenario and await rematch" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+          val gameTurnActor = TestProbe()
+
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+
+          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+
+          fsm ! GameTiedMessage("O", 1, 1)
+
+          assert(fsm.stateName == AwaitRematchState)
+          assert(fsm.stateData == AwaitRematchData(Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 11, 0), None, None, 1))
         }
 
       }
 
       "awaiting a rematch between the same players" should {
 
-        "be able to start a new game" in {
-          assert(false)
+        val uuid = java.util.UUID.randomUUID.toString
+        val gameEngine = TestProbe()
+
+        "handle a rematch" in {
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+          fsm.setState(AwaitRematchState, AwaitRematchData(Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 1, 10, 0), None, None, 1))
+
+          fsm ! PlayAgainMessage("X", true)
+
+          assert(fsm.stateName == AwaitRematchState)
+
+          fsm ! PlayAgainMessage("O", true)
+
+          assert(fsm.stateName == ActiveGameState)
         }
 
-        "be able to terminate the game without another rematch" in {
-          assert(false)
+        "handle a rematch request in opposite message order" in {
+
+          val firstPlayerActor = TestProbe()
+          val secondPlayerActor = TestProbe()
+
+          val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+          fsm.setState(AwaitRematchState, AwaitRematchData(Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Bob", 1, 10, 0), None, None, 1))
+
+          fsm ! PlayAgainMessage("O", true)
+
+          assert(fsm.stateName == AwaitRematchState)
+
+          fsm ! PlayAgainMessage("X", true)
+
+          assert(fsm.stateName == ActiveGameState)
         }
 
       }

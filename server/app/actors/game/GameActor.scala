@@ -34,10 +34,23 @@ final case class Player(playerActor: ActorRef, name: String, wins: Int, turns: I
 
 object GameActor {
   def props(gameEngineActor: ActorRef, uuid: String) = Props(new GameActor(gameEngineActor, uuid))
+
+  def incrementTurnCount(playerLetter: String, playerX: Player, playerO: Player): (Player, Player) = {
+    playerLetter match {
+      case "X" => (playerX.copy(turns = (playerX.turns + 1)), playerO)
+      case "O" => (playerX, playerO.copy(turns = (playerO.turns + 1)))
+    }
+  }
+
+  def incrementWonGamesCount(playerLetter: String, playerX: Player, playerO: Player): (Player, Player) = {
+    playerLetter match {
+      case "X" => (playerX.copy(wins = (playerX.wins + 1)), playerO)
+      case "O" => (playerX, playerO.copy(wins = (playerO.wins + 1)))
+    }
+  }
 }
 
 class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
-
   startWith(WaitingForFirstPlayerState, Uninitialized)
 
   when(WaitingForFirstPlayerState) {
@@ -63,42 +76,29 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   when(ActiveGameState) {
     case Event(m: TurnMessage, game: ActiveGameData) => {
-      val (x, o) = {
-        m.playerLetter.toString match {
-          case "X" => (game.playerX.copy(turns = (game.playerX.turns + 1)), game.playerO)
-          case "O" => (game.playerX, game.playerO.copy(turns = (game.playerO.turns + 1)))
-        }
-      }
+      val (x, o) = GameActor.incrementTurnCount(m.playerLetter.toString, game.playerX, game.playerO)
       game.gameTurnActor ! ProcessNextTurnMessage(m.playerLetter, m.game, m.grid, x.playerActor, o.playerActor, x.turns, o.turns)
       gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
       val g = game.copy(playerX = x, playerO = o)
       stay using g
     }
-    // PlayerActor sends this
     case Event(m: GameWonMessage, game: ActiveGameData) => {
       context.stop(game.gameTurnActor)
-
-      val (x, o) = {
-        m.lastPlayer match {
-          case "X" => (game.playerX.copy(wins = game.playerX.wins + 1), game.playerO)
-          case "O" => (game.playerX, game.playerO.copy(wins = game.playerO.wins + 1))
-        }
-      }
-
+      val (x1, o1) = GameActor.incrementTurnCount(m.lastPlayer.toString, game.playerX, game.playerO)
+      val (x, o) = GameActor.incrementWonGamesCount(m.lastPlayer.toString, x1, o1)
       val totalGames = game.totalGames + 1
+      val gameWonResponse = ServerToClientProtocol.wrapGameWonResponse(GameWonResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
+      val gameLostResponse = ServerToClientProtocol.wrapGameLostResponse(GameLostResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
 
-      m.lastPlayer match {
-        case "X" => {
-          x.playerActor ! ServerToClientProtocol.wrapGameWonResponse(GameWonResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
-          o.playerActor ! ServerToClientProtocol.wrapGameLostResponse(GameLostResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
-        }
-        case "O" => {
-          o.playerActor ! ServerToClientProtocol.wrapGameWonResponse(GameWonResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
-          x.playerActor ! ServerToClientProtocol.wrapGameLostResponse(GameLostResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames, x.wins, o.wins))
-        }
+      val (winner, loser) = m.lastPlayer match {
+        case "X" => (x.playerActor, o.playerActor)
+        case "O" => (o.playerActor, x.playerActor)
       }
 
+      winner ! gameWonResponse
+      loser ! gameLostResponse
       gameEngine ! GameWonSubscriberUpdateMessage(uuid, x.wins, o.wins, totalGames)
+
       goto(AwaitRematchState) using AwaitRematchData(x, o, None, None, totalGames)
     }
     // PlayerActor sends this
@@ -106,14 +106,16 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
       // kill the game turn actor, that game is done!
       context.stop(game.gameTurnActor)
 
+      val (x, o) = GameActor.incrementTurnCount(m.lastPlayer.toString, game.playerX, game.playerO)
       val totalGames = game.totalGames + 1
+
       val response = ServerToClientProtocol.wrapGameTiedResponse(GameTiedResponse(m.lastPlayer, m.lastGameBoardPlayed, m.lastGridPlayed, totalGames))
 
       game.playerO.playerActor ! response
       game.playerX.playerActor ! response
-
       gameEngine ! GameTiedSubscriberUpdateMessage(uuid, totalGames)
-      goto(AwaitRematchState) using AwaitRematchData(game.playerX, game.playerO, None, None, totalGames)
+
+      goto(AwaitRematchState) using AwaitRematchData(x, o, None, None, totalGames)
     }
     case Event(m: GameTerminatedMessage, game: ActiveGameData) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
@@ -130,20 +132,23 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   when(AwaitRematchState) {
     case Event(m: PlayAgainMessage, state: AwaitRematchData) => {
-      if (m.playAgain == false) {
+      val requestedRematch = m.playAgain
+
+      if (requestedRematch == false) {
         gameEngine ! GameOverMessage(uuid, m.player)
         state.playerX.playerActor ! GameOverMessage(uuid, m.player)
         state.playerO.playerActor ! GameOverMessage(uuid, m.player)
         stop
       } else {
+        // determine who requested the rematch
         val (playAgainX, playAgainO) = m.player match {
           case "X" => {
-            val x = Some(m.playAgain)
+            val x = Some(true)
             val o = state.rematchPlayerO
             (x, o)
           }
           case "O" => {
-            val o = Some(m.playAgain)
+            val o = Some(true)
             val x = state.rematchPlayerX
             (x, o)
           }
