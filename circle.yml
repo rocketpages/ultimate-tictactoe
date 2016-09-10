@@ -1,0 +1,6 @@
+## Customize deployment commands
+deployment:
+  staging:
+    branch: master
+    heroku:
+      appname: ultimate-tictactoe
