@@ -200,7 +200,7 @@ object GameClient extends js.JSApp {
 
       if (gameId != "") uuid = Some(gameId)
 
-      val WEBSOCKET_URL = "ws://" + dom.document.location.host + "/websocket"
+      val WEBSOCKET_URL = getWsProtocol() + dom.document.location.host + "/websocket"
       ws = Some(new WebSocket(WEBSOCKET_URL))
 
       jQuery("[id^=winner_]").hide()
@@ -289,5 +289,13 @@ object GameClient extends js.JSApp {
       jQuery("[id^=status-").hide()
       jQuery("#status-game-over").show()
     }
+  }
+
+  private def getWsProtocol(): String = {
+    val protocol = dom.document.location.protocol.toString
+    if (protocol.startsWith("https"))
+      "wss://"
+    else
+      "ws://"
   }
 }

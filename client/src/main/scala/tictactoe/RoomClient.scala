@@ -22,7 +22,7 @@ object RoomClient extends js.JSApp {
   def main(): Unit = {}
 
   def start(): Unit = {
-    val WEBSOCKET_URL = "ws://" + dom.document.location.host + "/gamestream"
+    val WEBSOCKET_URL = getWsProtocol + dom.document.location.host + "/gamestream"
     ws = Some(new WebSocket(WEBSOCKET_URL))
 
     // Process turn message ("push") from the server.
@@ -131,6 +131,14 @@ object RoomClient extends js.JSApp {
     val p = read[GameStreamTurnEvent](payload)
     val totalMoves = p.oTurns + p.xTurns
     jQuery("#game-" + p.uuid + "-total-moves").html(totalMoves.toString)
+  }
+
+  private def getWsProtocol(): String = {
+    val protocol = dom.document.location.protocol.toString
+    if (protocol.startsWith("https"))
+      "wss://"
+    else
+      "ws://"
   }
 
 }
