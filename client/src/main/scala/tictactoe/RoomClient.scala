@@ -135,6 +135,7 @@ object RoomClient extends js.JSApp {
 
   private def getWsProtocol(): String = {
     val protocol = dom.document.location.protocol.toString
+    dom.console.log(protocol)
     if (protocol.startsWith("https"))
       "wss://"
     else
