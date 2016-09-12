@@ -14,6 +14,7 @@ The goal of this sample project is to demonstrate the usage of some key technolo
 
 - Demonstrate concrete usage of advanced Akka features such as [Akka FSM](http://doc.akka.io/docs/akka/current/java/fsm.html) and how they can be leveraged to simplify the handling of state within message-driven systems.
 - Leverage [Scala.js](https://www.scala-js.org/) to implement a reactive UI without resorting to complex JavaScript technologies like Angular or React.
+- Kill the boredom of travel; coding is more fun than an in-flight entertainment system.
  
 ## Current Status
 
@@ -24,10 +25,10 @@ The following functionality is working:
     - Join a game that has been created by someone else
  
 - The *game page*:
-    - Keeps track of total number of moves per player.
-    - Keeps track of cumulative time of the turns for each player.
-    - Win, loss, and tie game statistics.
-    - Request a rematch.
+    - Keeps track of total number of moves per player
+    - Keeps track of cumulative time of the turns for each player
+    - Win, loss, and tie game statistics
+    - Request a rematch
  
  
 If you would like to contribute to this demo, please view the list of GitHub issues for ideas of functionality that would be nice to have.
