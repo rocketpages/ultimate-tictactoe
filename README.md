@@ -50,14 +50,14 @@ Once you have downloaded the prerequisites above, you'll need to compile, test, 
 
 To run, simply type the following to compile:
 
-```sbt clean compile`
+`sbt clean compile`
 
 Followed by:
 
-```sbt test`
+`sbt test`
 
 And finally:
 
-```sbt run`
+`sbt run`
 
 This will launch the server on `port 9000`. In order to play a game, you can open two browser windows and point them to `localhost:9000`.
