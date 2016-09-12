@@ -1,10 +1,10 @@
 # Ultimate Tic-Tac-Toe
 
-This is a sample project to demonstrate the integration between Play, Akka, and Scala.js, in order to implement a game of *ultimate tic-tac-toe*.
-
 The demo for this application can be found at [ultimate-tictactoe.herokuapp.com](ultimate-tictactoe.herokuapp.com).
 
 The game mechanics are best described in the following [blog post](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) on *Math With Bad Drawings*. Whereas regular tic-tac-toe is a boring game that involves an inevitable stalemate, *Ultimate Tic-Tac-Toe* brings a little excitement to the world of tic-tac-toe and forces strategic thinking.
+
+This is a sample project to demonstrate the integration between Play, Akka, and Scala.js.
 
 ![](https://canvas-files-prod.s3.amazonaws.com/uploads/cc6731a7-1152-4bce-9a14-e66e44985b3c/Screenshot 2016-09-11 19.37.29.png)
 
