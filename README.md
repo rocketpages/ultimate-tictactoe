@@ -13,7 +13,7 @@ This is a sample project to demonstrate the integration between Play, Akka, and 
 The goal of this sample project is to demonstrate the usage of some key technologies and how they integrate and complement each other:
 
 - Demonstrate concrete usage of advanced Akka features such as [Akka FSM](http://doc.akka.io/docs/akka/current/java/fsm.html) and how they can be leveraged to simplify the handling of state within message-driven systems.
-- Leverage [Scala.js](https://www.scala-js.org/) to implement a reactive UI without resorting to complex JavaScript technologies like Angular or React.
+- Leverage [Scala.js](https://www.scala-js.org/) to implement a reactive UI without resorting to complex JavaScript technologies like Angular or React. Scala.js integration was inspired by [https://github.com/vmunier/play-with-scalajs-example](https://github.com/vmunier/play-with-scalajs-example).
 - Kill the boredom of travel; coding is more fun than an in-flight entertainment system.
  
 ## Current Status
