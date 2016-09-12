@@ -2,7 +2,7 @@
 
 Build status: [![CircleCI](https://circleci.com/gh/rocketpages/ultimate-tictactoe/tree/master.svg?style=svg)](https://circleci.com/gh/rocketpages/ultimate-tictactoe/tree/master)
 
-The demo for this application can be found at [ultimate-tictactoe.herokuapp.com](ultimate-tictactoe.herokuapp.com).
+The demo for this application can be found at [ultimate-tictactoe.herokuapp.com](https://ultimate-tictactoe.herokuapp.com).
 
 The game mechanics are best described in the following [blog post](https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/) on *Math With Bad Drawings*. Whereas regular tic-tac-toe is a boring game that involves an inevitable stalemate, *Ultimate Tic-Tac-Toe* brings a little excitement to the world of tic-tac-toe and forces strategic thinking.
 
@@ -20,7 +20,7 @@ The goal of this sample project is to demonstrate the usage of some key technolo
  
 ## Current Status
 
-The following functionality is working:
+The following functionality is working.
 
 - The *home page*:
     - Create a new game (by entering your first name)
