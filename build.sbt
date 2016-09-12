@@ -44,8 +44,9 @@ lazy val client = (project in file("client")).settings(
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
     scalaVersion := scalaV
-  ).
-  jsConfigure(_ enablePlugins ScalaJSPlay)
+  ).jsConfigure(
+    _ enablePlugins ScalaJSPlay
+  )
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
