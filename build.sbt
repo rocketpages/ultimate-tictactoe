@@ -22,7 +22,8 @@ lazy val server = (project in file("server")).settings(
     "org.webjars" %% "webjars-play" % "2.4.0-1",
     "org.webjars" % "bootstrap" % "3.3.5",
     "org.webjars" % "jquery" % "2.1.4",
-    "org.webjars" % "font-awesome" % "4.4.0"
+    "org.webjars" % "font-awesome" % "4.4.0",
+    "org.scalaz" %% "scalaz-core" % "7.2.6"
   )
 ).enablePlugins(PlayScala).
   aggregate(clients.map(projectToRef): _*).

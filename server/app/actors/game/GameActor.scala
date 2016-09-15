@@ -9,24 +9,16 @@ import shared.{ServerToClientProtocol, MessageKeyConstants}
 
 // game states
 sealed trait State
-
 case object WaitingForFirstPlayerState extends State
-
 case object WaitingForSecondPlayerState extends State
-
 case object ActiveGameState extends State
-
 case object AwaitRematchState extends State
 
 // state transition data
 sealed trait Data
-
 final case class OnePlayerData(val playerX: Player) extends Data
-
 final case class ActiveGameData(val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
-
 final case class AwaitRematchData(playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
-
 case object Uninitialized extends Data
 
 // inner class
