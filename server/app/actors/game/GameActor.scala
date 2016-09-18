@@ -69,7 +69,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
   when(ActiveGameState) {
     case Event(m: TurnMessage, game: ActiveGameData) => {
       val (x, o) = GameActor.incrementTurnCount(m.playerLetter.toString, game.playerX, game.playerO)
-      game.gameTurnActor ! ProcessNextTurnMessage(m.playerLetter, m.game, m.grid, x.playerActor, o.playerActor, x.turns, o.turns)
+      game.gameTurnActor ! ProcessTurnMessage(m.playerLetter, m.game, m.grid, x.playerActor, o.playerActor, x.turns, o.turns)
       gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
       val g = game.copy(playerX = x, playerO = o)
       stay using g

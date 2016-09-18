@@ -8,7 +8,7 @@ object ActorMessageProtocol {
 
   case class StartGameMessage(turnIndicator: String, playerLetter: PlayerLetter, game: ActorRef, nameX: String, nameO: String)
   case class TurnMessage(playerLetter: PlayerLetter, game: String, grid: String)
-  case class ProcessNextTurnMessage(playerLetter: PlayerLetter, game: String, grid: String, x: ActorRef, o: ActorRef, xTurns: Int, oTurns: Int)
+  case class ProcessTurnMessage(playerLetter: PlayerLetter, game: String, grid: String, x: ActorRef, o: ActorRef, xTurns: Int, oTurns: Int)
   case class RegisterGameStreamSubscriberMessage()
   case class UpdateSubscribersWithGameStatusMessage(subscribers: List[ActorRef])
   case class CreateGameMessage(player: ActorRef, name: String)
