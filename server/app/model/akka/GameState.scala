@@ -46,6 +46,10 @@ class GameState(selections: List[TurnSelection]) {
     winningGames.toSet
   }
 
+  def isBoardWonBy(board: Int, player: PlayerLetter): Boolean = {
+    getWinningGamesFor(player).contains(board)
+  }
+
   def getAllWinningGames = {
     val xWins = getWinningGamesFor(PlayerLetter.X)
     val oWins = getWinningGamesFor(PlayerLetter.O)
@@ -60,6 +64,10 @@ class GameState(selections: List[TurnSelection]) {
     }
 
     wins
+  }
+
+  def getAllWinningGamesStr = {
+    getAllWinningGames.foldLeft("")((a,v) => a + v + ", ")
   }
 }
 
@@ -88,7 +96,7 @@ object GameState {
           if (p == player)
             selectedSquares += i
         }
-        case None => {}
+        case None => {} // do nothing
       }
     }
     selectedSquares.toSet

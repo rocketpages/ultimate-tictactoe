@@ -106,8 +106,27 @@ class GameStateTest extends WordSpecLike with Matchers with BeforeAndAfterAll {
 
         gameState match {
           case \/-(game) => {
-            this.info(GameStateTest.getAllWinningGamesString(game))
+            this.info(game.getAllWinningGamesStr)
             assert(game.isGameWon() && game.isGameWonBy(PlayerLetter.X))
+          }
+          case -\/(fail) => this.fail(fail.message)
+        }
+      }
+
+      "board array should be formatted properly for client side when board 0 won by player X" in {
+        val gameState = for {
+          g1 <- new GameState().processPlayerSelection(TurnSelection(0, 2, PlayerLetter.X))
+          g2 <- g1.processPlayerSelection(TurnSelection(2, 0, PlayerLetter.O))
+          g3 <- g2.processPlayerSelection(TurnSelection(0, 5, PlayerLetter.X))
+          g4 <- g3.processPlayerSelection(TurnSelection(5, 0, PlayerLetter.O))
+          g5 <- g4.processPlayerSelection(TurnSelection(0, 8, PlayerLetter.X))
+        } yield (g5)
+
+        gameState match {
+          // game is not in an error state
+          case \/-(game) => {
+            this.info(game.getAllWinningGamesStr)
+            assert(true)
           }
           case -\/(fail) => this.fail(fail.message)
         }
@@ -116,9 +135,3 @@ class GameStateTest extends WordSpecLike with Matchers with BeforeAndAfterAll {
   }
 }
 
-object GameStateTest {
-  def getAllWinningGamesString(game: GameState) = {
-    val wins: Array[String] = game.getAllWinningGames
-    wins.foldLeft("")((a,v) => a + v + ", ")
-  }
-}

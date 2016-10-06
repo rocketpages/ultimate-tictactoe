@@ -1,11 +1,16 @@
 package actors.game
 
+import actors.PlayerLetter._
 import model.akka.ActorMessageProtocol.StartGameMessage
 import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
 import akka.actor._
-import shared.ServerToClientProtocol.{GameLostResponse, GameTiedResponse, GameWonResponse}
+import model.akka.GameState
+import model.akka.GameState.TurnSelection
+import shared.ServerToClientProtocol._
 import shared.{ServerToClientProtocol, MessageKeyConstants}
+
+import scalaz.{-\/, \/-}
 
 // game states
 sealed trait State
@@ -17,7 +22,7 @@ case object AwaitRematchState extends State
 // state transition data
 sealed trait Data
 final case class OnePlayerData(val playerX: Player) extends Data
-final case class ActiveGameData(val gameTurnActor: ActorRef, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
+final case class ActiveGameData(val gameState: GameState, val playerX: Player, val playerO: Player, totalGames: Int) extends Data
 final case class AwaitRematchData(playerX: Player, playerO: Player, rematchPlayerX: Option[Boolean], rematchPlayerO: Option[Boolean], totalGames: Int) extends Data
 case object Uninitialized extends Data
 
@@ -53,7 +58,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
 
   when(WaitingForSecondPlayerState) {
     case Event(req: RegisterPlayerWithGameMessage, p: OnePlayerData) => {
-      goto(ActiveGameState) using ActiveGameData(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), p.playerX, Player(req.player, req.name, 0, 0, 0), 0)
+      goto(ActiveGameState) using ActiveGameData(new GameState(), p.playerX, Player(req.player, req.name, 0, 0, 0), 0)
     }
     case Event(m: GameTerminatedMessage, p: OnePlayerData) => {
       gameEngine ! GameOverMessage(uuid, m.terminatedByPlayer)
@@ -69,13 +74,42 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
   when(ActiveGameState) {
     case Event(m: TurnMessage, game: ActiveGameData) => {
       val (x, o) = GameActor.incrementTurnCount(m.playerLetter.toString, game.playerX, game.playerO)
-      game.gameTurnActor ! ProcessTurnMessage(m.playerLetter, m.game, m.grid, x.playerActor, o.playerActor, x.turns, o.turns)
-      gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
-      val g = game.copy(playerX = x, playerO = o)
-      stay using g
+      val s = game.gameState.processPlayerSelection(TurnSelection(m.game.toInt, m.grid.toInt, m.playerLetter))
+
+      s match {
+        // game is not in an error state
+        case \/-(g) => {
+
+          val (opponent, player) = if (m.playerLetter == PlayerLetter.O)
+            (game.playerX.playerActor, game.playerO.playerActor)
+          else
+            (game.playerO.playerActor, game.playerX.playerActor)
+
+          println(g.getAllWinningGamesStr)
+
+          val lastBoardWon = g.isBoardWonBy(m.game.toInt, m.playerLetter)
+
+          val r = OpponentTurnResponse(m.game.toInt, m.grid.toInt, m.grid.toInt, lastBoardWon, g.getAllWinningGames, MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, x.turns, o.turns)
+
+          if (lastBoardWon) {
+            player ! wrapBoardWonResponse(BoardWonResponse(m.game))
+          }
+
+          opponent ! wrapOpponentTurnResponse(r)
+          gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
+
+          //if (isGameWon) {
+          //player ! wrapGameWonResponse(GameWonResponse)
+          //self ! wrapGameWonResponse(GameWonResponse)
+          //}
+
+          stay using ActiveGameData(g, x, o, game.totalGames)
+        }
+        case -\/(fail) => stop(FSM.Failure(fail))
+      }
+
     }
     case Event(m: GameWonMessage, game: ActiveGameData) => {
-      context.stop(game.gameTurnActor)
       val (x1, o1) = GameActor.incrementTurnCount(m.lastPlayer.toString, game.playerX, game.playerO)
       val (x, o) = GameActor.incrementWonGamesCount(m.lastPlayer.toString, x1, o1)
       val totalGames = game.totalGames + 1
@@ -95,9 +129,6 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
     }
     // PlayerActor sends this
     case Event(m: GameTiedMessage, game: ActiveGameData) => {
-      // kill the game turn actor, that game is done!
-      context.stop(game.gameTurnActor)
-
       val (x, o) = GameActor.incrementTurnCount(m.lastPlayer.toString, game.playerX, game.playerO)
       val totalGames = game.totalGames + 1
 
@@ -151,7 +182,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
             case Some(rematchX) => {
               // both player x and player o have responded to the rematch request
               if (rematchX && rematchO) {
-                goto(ActiveGameState) using ActiveGameData(context.actorOf(Props[GameTurnActor], name = "gameTurnActor"), state.playerX, state.playerO, state.totalGames)
+                goto(ActiveGameState) using ActiveGameData(new GameState(), state.playerX, state.playerO, state.totalGames)
               } else {
                 log.error("Game ended in an invalid state")
                 stop

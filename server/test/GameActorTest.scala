@@ -4,6 +4,7 @@ import actors.player.PlayerActor
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit._
 import model.akka.ActorMessageProtocol._
+import model.akka.GameState
 import org.scalatest.WordSpecLike
 import org.scalatest.Matchers
 import org.scalatest.BeforeAndAfterAll
@@ -93,11 +94,13 @@ import scala.concurrent.duration._
           val firstPlayerActor = TestProbe()
           val secondPlayerActor = TestProbe()
           val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
+
           val firstPlayerReq = RegisterPlayerWithGameMessage(uuid: String, firstPlayerActor.ref, "Bob")
           val secondPlayerReq = RegisterPlayerWithGameMessage(uuid: String, secondPlayerActor.ref, "Doug")
 
           fsm ! firstPlayerReq
           fsm ! secondPlayerReq
+
           fsm ! TurnMessage(PlayerLetter.X, "1", "1")
 
           firstPlayerActor.expectMsg(500 millis, GameCreatedMessage(fsm, PlayerLetter.X))
@@ -120,12 +123,15 @@ import scala.concurrent.duration._
           fsm ! firstPlayerReq
           fsm ! secondPlayerReq
 
-          // send first two turn commands
-          fsm ! TurnMessage(PlayerLetter.X, "1", "1")
-          fsm ! TurnMessage(PlayerLetter.O, "2", "2")
-
           gameEngine.expectMsg(500 millis, GameStreamGameStartedMessage(uuid, "Bob", "Doug"))
+
+          // send first two turn commands
+          fsm ! TurnMessage(PlayerLetter.X, "0", "2")
+
           gameEngine.expectMsg(500 millis, GameStreamTurnUpdateMessage(uuid, 1, 0))
+
+          fsm ! TurnMessage(PlayerLetter.O, "2", "5")
+
           gameEngine.expectMsg(500 millis, GameStreamTurnUpdateMessage(uuid, 1, 1))
         }
 
@@ -136,7 +142,7 @@ import scala.concurrent.duration._
 
           val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
 
-          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+          fsm.setState(ActiveGameState, ActiveGameData(new GameState(), Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
 
           fsm ! GameWonMessage("X", 1, 1)
 
@@ -151,7 +157,7 @@ import scala.concurrent.duration._
 
           val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
 
-          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+          fsm.setState(ActiveGameState, ActiveGameData(new GameState(), Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
 
           fsm ! GameWonMessage("O", 1, 1)
 
@@ -166,7 +172,7 @@ import scala.concurrent.duration._
 
           val fsm = TestFSMRef(new GameActor(gameEngine.ref, uuid))
 
-          fsm.setState(ActiveGameState, ActiveGameData(gameTurnActor.ref, Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
+          fsm.setState(ActiveGameState, ActiveGameData(new GameState(), Player(firstPlayerActor.ref, "Bob", 0, 10, 0), Player(secondPlayerActor.ref, "Doug", 0, 10, 0), 0))
 
           fsm ! GameTiedMessage("O", 1, 1)
 
@@ -198,7 +204,6 @@ import scala.concurrent.duration._
         }
 
         "handle a rematch request in opposite message order" in {
-
           val firstPlayerActor = TestProbe()
           val secondPlayerActor = TestProbe()
 

@@ -72,6 +72,8 @@ object GameClient extends js.JSApp {
   }
 
   private def processOpponentUpdate(response: OpponentTurnResponse): Unit = {
+    println(response)
+
     // Show their turn info on the game board.
     jQuery("#" + response.gridIdSelector).addClass(opponent)
     jQuery("#" + response.gridIdSelector).html(opponent)
@@ -99,14 +101,14 @@ object GameClient extends js.JSApp {
         }
       }
 
-        // enable all boards because a "won" board was selected for the last turn
-        if (shouldEnableAllBoardsForThisTurn(response))
-          jQuery("[id^=cell_]").prop("disabled", false)
-        else
-          jQuery("[id^=cell_" + response.nextGameId + "]").prop("disabled", false)
+      // enable all boards because a "won" board was selected for the last turn
+      if (shouldEnableAllBoardsForThisTurn(response))
+        jQuery("[id^=cell_]").prop("disabled", false)
+      else
+        jQuery("[id^=cell_" + response.nextGameId + "]").prop("disabled", false)
 
-        jQuery("[id^=status-").hide()
-        jQuery("#status-your-turn").show()
+      jQuery("[id^=status-").hide()
+      jQuery("#status-your-turn").show()
     }
   }
 
@@ -259,6 +261,8 @@ object GameClient extends js.JSApp {
 
         val wrapper: ServerToClientWrapper = upickle.default.read[ServerToClientWrapper](data)
         val payload: String = upickle.default.write(wrapper.p)
+
+        println(payload)
 
         wrapper.t.toString match {
           case MessageKeyConstants.MESSAGE_HANDSHAKE => processHandshakeResponse(read[HandshakeResponse](payload), nameX, nameO)
