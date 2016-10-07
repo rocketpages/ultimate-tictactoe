@@ -113,6 +113,23 @@ class GameStateTest extends WordSpecLike with Matchers with BeforeAndAfterAll {
         }
       }
 
+      "handle the scenario in which a player selects a square that has already been won" in {
+        val gameState = for {
+          g1 <- new GameState().processPlayerSelection(TurnSelection(0, 2, PlayerLetter.X))
+          g2 <- g1.processPlayerSelection(TurnSelection(2, 0, PlayerLetter.O))
+          g3 <- g2.processPlayerSelection(TurnSelection(0, 5, PlayerLetter.X))
+          g4 <- g3.processPlayerSelection(TurnSelection(5, 0, PlayerLetter.O))
+          g5 <- g4.processPlayerSelection(TurnSelection(0, 8, PlayerLetter.X))
+          g6 <- g5.processPlayerSelection(TurnSelection(8, 0, PlayerLetter.O)) // <- game 0 was already won by X
+          g7 <- g6.processPlayerSelection(TurnSelection(6, 2, PlayerLetter.X)) // <- this is a valid move!
+        } yield (g7)
+
+        gameState match {
+          case \/-(game) => assert(true)
+          case -\/(fail) => this.fail(fail.message)
+        }
+      }
+
       "board array should be formatted properly for client side when board 0 won by player X" in {
         val gameState = for {
           g1 <- new GameState().processPlayerSelection(TurnSelection(0, 2, PlayerLetter.X))
