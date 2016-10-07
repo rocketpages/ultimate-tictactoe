@@ -78,10 +78,6 @@ class GameEngineActorTest extends TestKit(ActorSystem("GameEngineActorSpec")) wi
 
     }
 
-    "a second player joins a game" should {
-
-    }
-
   }
 }
 
