@@ -85,8 +85,6 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
           else
             (game.playerO.playerActor, game.playerX.playerActor)
 
-          println(g.getAllWinningGamesStr)
-
           val lastBoardWon = g.isBoardWonBy(m.game.toInt, m.playerLetter)
 
           val r = OpponentTurnResponse(m.game.toInt, m.grid.toInt, m.grid.toInt, lastBoardWon, g.getAllWinningGames, MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, x.turns, o.turns)
@@ -98,10 +96,9 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
           opponent ! wrapOpponentTurnResponse(r)
           gameEngine ! GameStreamTurnUpdateMessage(uuid, x.turns, o.turns)
 
-          //if (isGameWon) {
-          //player ! wrapGameWonResponse(GameWonResponse)
-          //self ! wrapGameWonResponse(GameWonResponse)
-          //}
+          if (g.isGameWon()) {
+            self ! GameWonMessage(m.playerLetter.toString, m.game.toInt, m.grid.toInt)
+          }
 
           stay using ActiveGameData(g, x, o, game.totalGames)
         }
@@ -184,8 +181,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
               if (rematchX && rematchO) {
                 goto(ActiveGameState) using ActiveGameData(new GameState(), state.playerX, state.playerO, state.totalGames)
               } else {
-                log.error("Game ended in an invalid state")
-                stop
+                stop(FSM.Failure("invalid rematch state"))
               }
             }
             case _ => stay using AwaitRematchData(state.playerX, state.playerO, playAgainX, playAgainO, state.totalGames)
@@ -213,7 +209,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         case p: OnePlayerData => {
           p.playerX.playerActor ! GameCreatedMessage(self, PlayerLetter.X)
         }
-        case _ => log.error(s"invalid state match for WaitingForFirstPlayer, stateData ${stateData}")
+        case _ => stop(FSM.Failure(s"invalid state match for WaitingForFirstPlayer, stateData ${stateData}"))
       }
     }
     case WaitingForSecondPlayerState -> ActiveGameState =>
@@ -223,7 +219,7 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
           g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
           gameEngine ! GameStreamGameStartedMessage(uuid, g.playerX.name, g.playerO.name)
         }
-        case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
+        case _ => stop(FSM.Failure(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}"))
       }
     case AwaitRematchState -> ActiveGameState =>
       nextStateData match {
@@ -231,14 +227,13 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
           g.playerX.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_YOUR_TURN, playerLetter = PlayerLetter.X, self, g.playerX.name, g.playerO.name)
           g.playerO.playerActor ! StartGameMessage(turnIndicator = MessageKeyConstants.MESSAGE_TURN_INDICATOR_WAITING, playerLetter = PlayerLetter.O, self, g.playerX.name, g.playerO.name)
         }
-        case _ => log.error(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}")
+        case _ => stop(FSM.Failure(s"invalid state match for WaitingForSecondPlayer, stateData ${stateData}"))
       }
   }
 
   whenUnhandled {
-    case _ => {
-      log.error("invalid message received")
-      stay
+    case m => {
+      stop(FSM.Failure("invalid message received: " + m))
     }
   }
 

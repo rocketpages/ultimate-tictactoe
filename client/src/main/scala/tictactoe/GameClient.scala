@@ -67,7 +67,7 @@ object GameClient extends js.JSApp {
 
   private def shouldEnableAllBoardsForThisTurn(response: OpponentTurnResponse): Boolean = {
     // was the last board played an already won board? if so, we need to enable all boards for this turn
-    val lastBoardPlayedWinner = response.boardsWonArr(response.nextGameId - 1)
+    val lastBoardPlayedWinner = response.boardsWonArr(response.nextGameId)
     if (lastBoardPlayedWinner == "X" || lastBoardPlayedWinner == "O") true else false
   }
 
