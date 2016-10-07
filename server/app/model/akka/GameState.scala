@@ -15,7 +15,7 @@ class GameState(selections: List[TurnSelection]) {
     for {
       v1 <- isSquareSelectionInRange(selection)
       v2 <- isSquareSelectionEmpty(selection, selections)
-      v3 <- isSquarePlayedInValidGame(selection, selections)
+      v3 <- isSquarePlayedInValidGame(selection, selections, getAllWinningGames)
       v4 <- isLastPlayerValid(selection, selections)
     } yield {
       new GameState(selections :+ selection)
@@ -119,15 +119,22 @@ object GameState {
       -\/(InvalidTurnSelection("square can not be selected twice"))
   }
 
-  private def isSquarePlayedInValidGame(turnSelection: TurnSelection, selections: List[TurnSelection]): InvalidTurnSelection \/ Boolean = {
+  private def isSquarePlayedInValidGame(turnSelection: TurnSelection, selections: List[TurnSelection], winningGames: Array[String]): InvalidTurnSelection \/ Boolean = {
     if (selections.nonEmpty) {
-      // find the last square selection
-      val lastSquare = selections.last.square
-      // this board must be equal to the square of the last selection based on ultimate tic-tac-toe rules
-      if (lastSquare == turnSelection.game)
+      val lastSelection = selections.last
+      val lastSelectedSquarePlayedOnWinningGame = winningGames(lastSelection.square) == "X" || winningGames(lastSelection.square) == "O"
+
+      if (lastSelectedSquarePlayedOnWinningGame) {
         \/-(true)
-      else
-        -\/(InvalidTurnSelection(s"violates ultimate tic-tac-toe rules: wrong game board played based on previous selection: played:${turnSelection.game}, expected:${lastSquare}"))
+      } else {
+        // find the last square selection
+        val lastSquare = selections.last.square
+        // this board must be equal to the square of the last selection based on ultimate tic-tac-toe rules
+        if (lastSquare == turnSelection.game)
+          \/-(true)
+        else
+          -\/(InvalidTurnSelection(s"violates ultimate tic-tac-toe rules: wrong game board played based on previous selection: played:${turnSelection.game}, expected:${lastSquare}"))
+      }
     }
     else \/-(true)
   }
