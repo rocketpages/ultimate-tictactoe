@@ -1,6 +1,5 @@
 package actors.game
 
-import actors.PlayerLetter._
 import model.akka.ActorMessageProtocol.StartGameMessage
 import model.akka.ActorMessageProtocol._
 import actors.PlayerLetter
@@ -104,7 +103,6 @@ class GameActor(gameEngine: ActorRef, uuid: String) extends FSM[State, Data] {
         }
         case -\/(fail) => stop(FSM.Failure(fail))
       }
-
     }
     case Event(m: GameWonMessage, game: ActiveGameData) => {
       val (x1, o1) = GameActor.incrementTurnCount(m.lastPlayer.toString, game.playerX, game.playerO)

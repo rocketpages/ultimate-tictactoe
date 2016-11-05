@@ -3,49 +3,32 @@ package shared
 object ServerToClientProtocol {
 
   sealed trait Payload
-
   case class BoardWonResponse(gameId: String) extends Payload
-
   case class GameStartResponse(turnIndicator: String, playerLetter: String, nameX: String, nameO: String) extends Payload
-
   case class HandshakeResponse(status: String) extends Payload
-
   case class Ping() extends Payload
-
   case class OpponentTurnResponse(gameId: Int, gridId: Int, nextGameId: Int, lastBoardWon: Boolean, boardsWonArr: Array[String], status: String, xTurns: Int, oTurns: Int) extends Payload {
     val gridIdSelector = "cell_" + gameId + gridId
   }
-
   case class GameWonResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int, winsX: Int, winsO: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
-
   case class GameLostResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int, winsX: Int, winsO: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
-
   case class GameTiedResponse(lastPlayer: String, lastGameId: Int, lastGridId: Int, totalGames: Int) extends Payload {
     val lastGridIdSelector = "cell_" + lastGameId + lastGridId
   }
-
   case class GameCreatedEvent(uuid: String, x: String) extends Payload
-
   case class GameStartedEvent(uuid: String, x: String, o: String) extends Payload
-
   case class GameOverEvent(uuid: String, fromPlayer: String) extends Payload
-
   case class GameStreamWonEvent(uuid: String, winsPlayerX: Int, winsPlayerO: Int, totalGames: Int) extends Payload
-
   case class GameStreamTiedEvent(uuid: String, totalGames: Int) extends Payload
-
   case class OpenGameStreamUpdateEvent(uuid: String, xName: String) extends Payload
-
   case class ClosedGameStreamUpdateEvent(uuid: String, xName: String, oName: String, xWins: Int, oWins: Int, totalMoves: Int, totalGames: Int) extends Payload
-
   case class GameStreamTurnEvent(uuid: String, xTurns: Int, oTurns: Int) extends Payload
 
   type MessageType = String
-
   case class ServerToClientWrapper(t: MessageType, p: Payload)
 
   def wrapBoardWonResponse(m: BoardWonResponse) = ServerToClientWrapper(new MessageType(MessageKeyConstants.MESSAGE_BOARD_WON), m)

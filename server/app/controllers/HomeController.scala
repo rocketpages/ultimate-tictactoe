@@ -10,6 +10,8 @@ import play.api.mvc._
 import play.api.libs.streams._
 import play.api.i18n.{MessagesApi, I18nSupport}
 
+import scala.concurrent.Future
+
 class HomeController @Inject() (val messagesApi: MessagesApi)(implicit system: ActorSystem, materializer: Materializer) extends Controller with I18nSupport {
 
   val gameEngineActor = system.actorOf(Props[GameEngineActor], name = "gameEngineActor")
@@ -17,27 +19,31 @@ class HomeController @Inject() (val messagesApi: MessagesApi)(implicit system: A
   /**
    * Renders the UI
    */
-  def index = Action {
-    Ok(views.html.index(gameForm))
+  def index = Action.async {
+    Future(Ok(views.html.index(gameForm)))
   }
 
   /**
     * Renders the game room
     */
-  def createGame = Action { implicit request =>
-    gameForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.index(formWithErrors)),
-      f => Ok(views.html.game(Some(f.nameX), None, None))
+  def createGame = Action.async { implicit request =>
+    Future(
+      gameForm.bindFromRequest.fold(
+        formWithErrors => BadRequest(views.html.index(formWithErrors)),
+        f => Ok(views.html.game(Some(f.nameX), None, None))
+      )
     )
   }
 
   /**
     * Renders the game room
     */
-  def joinGame = Action { implicit request =>
-    joinGameForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.index(gameForm)),
-      f => Ok(views.html.game(Some(f.nameX), Some(f.nameO), Some(f.uuid)))
+  def joinGame = Action.async { implicit request =>
+    Future(
+      joinGameForm.bindFromRequest.fold(
+        formWithErrors => BadRequest(views.html.index(gameForm)),
+        f => Ok(views.html.game(Some(f.nameX), Some(f.nameO), Some(f.uuid)))
+      )
     )
   }
 
