@@ -9,6 +9,7 @@ import model.forms.Forms._
 import play.api.mvc._
 import play.api.libs.streams._
 import play.api.i18n.{MessagesApi, I18nSupport}
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import scala.concurrent.Future
 
